@@ -1,0 +1,284 @@
+{
+  "museScoreTemplates":
+	[
+		{
+		  "museScoreFile": "piano_4-4_01.mscz",
+		  "Instrument": "Piano Solo",
+		  "timeSignature": [4, 4],
+		  "tempo": ["q", 80],
+		  "duration": 4,
+		  "chordProgression": ["Am---|Dm9---|G9---|Cmaj9---"],
+		  "character": ["Delicate", "Peaceful", "Reflective", "Romantic", "Sad"]
+		},
+		{
+		  "museScoreFile": "piano_4-4_02.mscz",
+		  "Instrument": "Piano Solo",
+		  "timeSignature": [4, 4],
+		  "tempo": ["q", 80],
+		  "duration": 4,
+		  "chordProgression": ["Am---|Dm9---|G9---|Cmaj9---"],
+		  "character": ["Delicate", "Peaceful", "Reflective", "Romantic", "Sad"]
+		},
+		{
+		  "museScoreFile": "piano_4-4_03.mscz",
+		  "Instrument": "Piano Solo",
+		  "timeSignature": [4, 4],
+		  "tempo": ["q", 80],
+		  "duration": 4,
+		  "chordProgression": ["Am---|Dm9---|G9---|Cmaj9---"],
+		  "character": ["Delicate", "Peaceful", "Reflective", "Romantic", "Sad"]
+		},
+		{
+		  "museScoreFile": "piano_4-4_04.mscz",
+		  "Instrument": "Piano Solo",
+		  "timeSignature": [4, 4],
+		  "tempo": ["q", 80],
+		  "duration": 4,
+		  "chordProgression": ["Am---|Dm9---|G9---|Cmaj9---"],
+		  "character": ["Delicate", "Peaceful", "Reflective", "Romantic", "Sad"]
+		},
+		{
+		  "museScoreFile": "piano_4-4_05.mscz",
+		  "Instrument": "Piano Solo",
+		  "timeSignature": [4, 4],
+		  "tempo": ["q", 80],
+		  "duration": 4,
+		  "chordProgression": ["Am---|Dm9---|G9---|Cmaj9---"],
+		  "character": ["Delicate", "Peaceful", "Reflective", "Romantic", "Sad"]
+		},
+		{
+		  "museScoreFile": "piano_4-4_06.mscz",
+		  "Instrument": "Piano Solo",
+		  "timeSignature": [4, 4],
+		  "tempo": ["q", 80],
+		  "duration": 4,
+		  "chordProgression": ["Am---|Dm9---|G9---|Cmaj9---"],
+		  "character": ["Delicate", "Peaceful", "Reflective", "Romantic", "Sad"]
+		},
+		{
+		  "museScoreFile": "piano_4-4_07.mscz",
+		  "Instrument": "Piano Solo",
+		  "timeSignature": [4, 4],
+		  "tempo": ["q", 80],
+		  "duration": 4,
+		  "chordProgression": ["Am---|Dm9---|G9---|Cmaj9---"],
+		  "character": ["Delicate", "Peaceful", "Reflective", "Romantic", "Sad"]
+		},
+		{
+		  "museScoreFile": "piano_duet_3-4_01.mscz",
+		  "Instrument": "Piano Duet",
+		  "timeSignature": [3, 4],
+		  "tempo": ["q", 100],
+		  "duration": 4,
+		  "chordProgression": ["Am9---|Dm9---|G9---|Cmaj9---"],
+		  "character": ["Delicate", "Peaceful", "Reflective", "Romantic", "Sad"]
+		},
+		{
+		  "museScoreFile": "piano_duet_3-4_02.mscz",
+		  "Instrument": "Piano Duet",
+		  "timeSignature": [3, 4],
+		  "tempo": ["q", 100],
+		  "duration": 4,
+		  "chordProgression": ["Am9---|Dm9---|G9---|Cmaj9---"],
+		  "character": ["Delicate", "Peaceful", "Reflective", "Romantic", "Sad"]
+		},
+		{
+		  "museScoreFile": "piano_duet_3-4_03.mscz",
+		  "Instrument": "Piano Duet",
+		  "timeSignature": [3, 4],
+		  "tempo": ["q", 100],
+		  "duration": 4,
+		  "chordProgression": ["Am9---|Dm9---|G9---|Cmaj9---"],
+		  "character": ["Delicate", "Peaceful", "Reflective", "Romantic", "Sad"]
+		},
+		{
+		  "museScoreFile": "piano_duet_4-4_01.mscz",
+		  "Instrument": "Piano Duet",
+		  "timeSignature": [4, 4],
+		  "tempo": ["q", 100],
+		  "duration": 4,
+		  "chordProgression": ["Am9---|Dm9---|G7---|Cmaj9---"],
+		  "character": ["Delicate", "Peaceful", "Reflective", "Romantic", "Sad"]
+		},
+		{
+		  "museScoreFile": "piano_duet_4-4_02.mscz",
+		  "Instrument": "Piano Duet",
+		  "timeSignature": [4, 4],
+		  "tempo": ["q", 100],
+		  "duration": 4,
+		  "chordProgression": ["Am9---|Dm9---|G7---|Cmaj9---"],
+		  "character": ["Delicate", "Peaceful", "Reflective", "Romantic", "Sad"]
+		},
+		{
+		  "museScoreFile": "piano_duet_4-4_03.mscz",
+		  "Instrument": "Piano Duet",
+		  "timeSignature": [4, 4],
+		  "tempo": ["q", 120],
+		  "duration": 8,
+		  "chordProgression": ["Am9---|Am9---|Dm9---|Dm9---|G7---|G7---|Cmaj9---|Cmaj9---"],
+		  "character": ["Cheerful", "Comedic", "Festive", "Peaceful", "Reflective", "Romantic"]
+		},
+		{
+		  "museScoreFile": "piano_duet_6-8_01.mscz",
+		  "Instrument": "Piano Duet",
+		  "timeSignature": [6, 8],
+		  "tempo": ["qd", 54],
+		  "duration": 4,
+		  "chordProgression": ["Am---|Dm9---|G---|Cmaj9---"],
+		  "character": ["Delicate", "Peaceful", "Reflective", "Romantic", "Sad"]
+		},
+		{
+		  "museScoreFile": "piano_duet_6-8_02.mscz",
+		  "Instrument": "Piano Duet",
+		  "timeSignature": [6, 8],
+		  "tempo": ["qd", 54],
+		  "duration": 4,
+		  "chordProgression": ["Am---|Dm9---|G---|Cmaj9---"],
+		  "character": ["Delicate", "Peaceful", "Reflective", "Romantic", "Sad"]
+		},
+		{
+		  "museScoreFile": "string_quartet_3-4_01.mscz",
+		  "Instrument": "String Quartet",
+		  "timeSignature": [3, 4],
+		  "tempo": ["q", 100],
+		  "duration": 4,
+		  "chordProgression": ["Am---|Dm9---|G---|Cmaj9---"],
+		  "character": ["Delicate", "Peaceful", "Reflective", "Romantic", "Sad"]
+		},
+		{
+		  "museScoreFile": "string_quartet_3-4_01.mscz",
+		  "Instrument": "String Quartet",
+		  "timeSignature": [3, 4],
+		  "tempo": ["q", 100],
+		  "duration": 8,
+		  "chordProgression": ["Am---|Em/G---|Fmaj7---|C/E---|Dm9---|Am/C---|B9---|E---"],
+		  "character": ["Delicate", "Peaceful", "Reflective", "Romantic", "Sad"]
+		},
+		{
+		  "museScoreFile": "string_quartet_3-4_02.mscz",
+		  "Instrument": "String Quartet",
+		  "timeSignature": [3, 4],
+		  "tempo": ["q", 100],
+		  "duration": 8,
+		  "chordProgression": ["Am---|Em/G---|Fmaj7---|C/E---|Dm9---|Am/C---|B9---|E---"],
+		  "character": ["Delicate", "Peaceful", "Reflective", "Romantic", "Sad"]
+		},
+		{
+		  "museScoreFile": "string_quartet_3-4_03.mscz",
+		  "Instrument": "String Quartet",
+		  "timeSignature": [3, 4],
+		  "tempo": ["q", 100],
+		  "duration": 8,
+		  "chordProgression": ["Am---|Em/G---|Fmaj7---|C/E---|Dm9---|Am/C---|B9---|E---"],
+		  "character": ["Delicate", "Peaceful", "Reflective", "Romantic", "Sad"]
+		},
+		{
+		  "museScoreFile": "string_quartet_3-4_04.mscz",
+		  "Instrument": "String Quartet",
+		  "timeSignature": [3, 4],
+		  "tempo": ["q", 100],
+		  "duration": 8,
+		  "chordProgression": ["Am---|Em/G---|Fmaj7---|C/E---|Dm9---|Am/C---|B9---|E---"],
+		  "character": ["Delicate", "Peaceful", "Reflective", "Romantic", "Sad"]
+		},
+		{
+		  "museScoreFile": "string_quartet_3-4_05.mscz",
+		  "Instrument": "String Quartet",
+		  "timeSignature": [3, 4],
+		  "tempo": ["q", 100],
+		  "duration": 8,
+		  "chordProgression": ["Am---|Em/G---|Fmaj7---|C/E---|Dm9---|Am/C---|B9---|E---"],
+		  "character": ["Delicate", "Peaceful", "Reflective", "Romantic", "Sad"]
+		},
+		{
+		  "museScoreFile": "orchestra_6-8_01.mscz",
+		  "Instrument": "Orchestra",
+		  "timeSignature": [6, 8],
+		  "tempo": ["qd", 48],
+		  "duration": 4,
+		  "chordProgression": ["Am9-D9/A-|Am9-D9/A-|Am9-D9/A-|Am9-D9/A-"],
+		  "character": ["Adventurous", "Fantasy", "Mysterious", "Peaceful", "Romantic"]
+		},
+		{
+		  "museScoreFile": "orchestra_6-8_02.mscz",
+		  "Instrument": "Orchestra",
+		  "timeSignature": [6, 8],
+		  "tempo": ["qd", 48],
+		  "duration": 4,
+		  "chordProgression": ["Am9-D9/A-|Am9-D9/A-|Am9-D9/A-|Am9-D9/A-"],
+		  "character": ["Adventurous", "Fantasy", "Mysterious", "Peaceful", "Romantic"]
+		},
+		{
+		  "museScoreFile": "orchestra_6-8_03.mscz",
+		  "Instrument": "Orchestra",
+		  "timeSignature": [6, 8],
+		  "tempo": ["qd", 48],
+		  "duration": 4,
+		  "chordProgression": ["Am9-D9/A-|Am9-D9/A-|Am9-D9/A-|Am9-D9/A-"],
+		  "character": ["Adventurous", "Fantasy", "Mysterious", "Peaceful", "Romantic"]
+		},
+		{
+		  "museScoreFile": "orchestra_6-8_04.mscz",
+		  "Instrument": "Orchestra",
+		  "timeSignature": [6, 8],
+		  "tempo": ["qd", 48],
+		  "duration": 4,
+		  "chordProgression": ["Am9-D9/A-|Am9-D9/A-|Am9-D9/A-|Am9-D9/A-"],
+		  "character": ["Adventurous", "Fantasy", "Mysterious", "Peaceful", "Romantic"]
+		},
+		{
+		  "museScoreFile": "orchestra_6-8_05.mscz",
+		  "Instrument": "Orchestra",
+		  "timeSignature": [6, 8],
+		  "tempo": ["qd", 48],
+		  "duration": 4,
+		  "chordProgression": ["Am9-D9/A-|Am9-D9/A-|Am9-D9/A-|Am9-D9/A-"],
+		  "character": ["Adventurous", "Fantasy", "Mysterious", "Peaceful", "Romantic"]
+		},
+		{
+		  "museScoreFile": "orchestra_4-4_01.mscz",
+		  "Instrument": "Orchestra",
+		  "timeSignature": [4, 4],
+		  "tempo": ["q", 120],
+		  "duration": 8,
+		  "chordProgression": ["Am---|Am---|G#m---|G#m---|Am---|Am---|Cm---|Cm---"],
+		  "character": ["Adventurous", "Mysterious", "Ominous", "Reflective"]
+		},
+		{
+		  "museScoreFile": "orchestra_4-4_02.mscz",
+		  "Instrument": "Orchestra",
+		  "timeSignature": [4, 4],
+		  "tempo": ["q", 120],
+		  "duration": 8,
+		  "chordProgression": ["Am---|Am---|G#m---|G#m---|Am---|Am---|Cm---|Cm---"],
+		  "character": ["Adventurous", "Mysterious", "Ominous", "Reflective"]
+		},
+		{
+		  "museScoreFile": "orchestra_4-4_03.mscz",
+		  "Instrument": "Orchestra",
+		  "timeSignature": [4, 4],
+		  "tempo": ["q", 120],
+		  "duration": 8,
+		  "chordProgression": ["Am---|Am---|G#m---|G#m---|Am---|Am---|Cm---|Cm---"],
+		  "character": ["Adventurous", "Mysterious", "Ominous", "Reflective"]
+		},
+		{
+		  "museScoreFile": "orchestra_4-4_04.mscz",
+		  "Instrument": "Orchestra",
+		  "timeSignature": [4, 4],
+		  "tempo": ["q", 120],
+		  "duration": 8,
+		  "chordProgression": ["Am---|Am---|G#m---|G#m---|Am---|Am---|Cm---|Cm---"],
+		  "character": ["Adventurous", "Mysterious", "Ominous", "Reflective"]
+		},
+		{
+		  "museScoreFile": "orchestra_4-4_05.mscz",
+		  "Instrument": "Orchestra",
+		  "timeSignature": [4, 4],
+		  "tempo": ["q", 120],
+		  "duration": 8,
+		  "chordProgression": ["Am---|Am---|G#m---|G#m---|Am---|Am---|Cm---|Cm---"],
+		  "character": ["Adventurous", "Mysterious", "Ominous", "Reflective"]
+		}
+	]
+}
