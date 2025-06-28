@@ -88,6 +88,7 @@ MuseScore {
 
 
         var notes = extractNotes(xml);
+
         var cursor = curScore.newCursor();
         var numMeasures=getNumMeasures(xml);
         curScore.startCmd();
