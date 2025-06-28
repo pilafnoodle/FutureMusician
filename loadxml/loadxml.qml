@@ -20,6 +20,20 @@ MuseScore {
         file.source = Qt.resolvedUrl("piano_4-4_04.musicxml");
         var xml = file.read();
 
+        function getNumMeasures(xmlText) {
+            var measureRegex = /<measure[^>]*\bnumber="(\d+)"/g;
+            var match;
+            var max = 0;
+
+            while ((match = measureRegex.exec(xmlText)) !== null) {
+                var num = parseInt(match[1], 10);
+                if (num > max)
+                    max = num;
+            }
+
+            return max;
+        }
+
 
         function typeToDurationType(typeStr) {
             switch(typeStr) {
@@ -71,14 +85,34 @@ MuseScore {
             }
             return { treble: treble, bass: bass };
         }
-        var notes = extractNotes(xml);
 
+
+        var notes = extractNotes(xml);
         var cursor = curScore.newCursor();
+        var numMeasures=getNumMeasures(xml);
         curScore.startCmd();
 
-        //(staff 1 = track 0), each staff can have a maximum of 4 voices (tracks)
-        //treble staff
-        cursor.rewind(1);
+
+        cursor.rewind(1); // Move to selection start
+
+        var measure = cursor.measure;
+        for (var i = 0; i < numMeasures; ++i) {
+            if (measure && measure.prevMeasure)
+                measure = measure.prevMeasure;
+            else
+                break;
+        }
+        var targetTick = 0;
+        if (measure) {
+            targetTick = measure.firstSegment.tick;
+        }
+        cursor.rewind(0);
+        cursor.rewindToTick(targetTick);
+
+        cursor.track = 0;
+
+        //rewind end
+
         cursor.track = 0;
         for (var i = 0; i < notes.treble.length; i++) {
             var note = notes.treble[i];
@@ -104,6 +138,20 @@ MuseScore {
 
         //bass staff
         cursor.rewind(1);
+        measure = cursor.measure;
+        for (var i = 0; i < numMeasures; ++i) {
+            if (measure && measure.prevMeasure)
+                measure = measure.prevMeasure;
+            else
+                break;
+        }
+        targetTick = 0;
+        if (measure) {
+            targetTick = measure.firstSegment.tick;
+        }
+        cursor.rewind(0);
+        cursor.rewindToTick(targetTick);
+        
         cursor.track = 4;
         for (var j = 0; j < notes.bass.length; j++) {
             var note = notes.bass[j];
@@ -131,5 +179,4 @@ MuseScore {
         Qt.quit();
     }
 }
-
 
