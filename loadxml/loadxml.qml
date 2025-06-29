@@ -12,6 +12,97 @@ MuseScore {
     width: 400
     height: 350
 
+    property var uiData: {
+        "userInterface": {
+            "Instrument": ["Piano Solo", "Piano Duet", "String Quartet", "Orchestra"],
+            "character": ["Adventurous", "Cheerful", "Comedic", "Delicate", "Fantasy", "Festive", "Heroic", "Majestic", "Militaristic", "Mysterious", "Ominous", "Peaceful", "Reflective", "Romantic", "Sad", "Urgent"],
+            "chordProgression": [
+                { "Am-Dm-G-C": ["Am---|Dm9---|G9---|Cmaj9---", "Am---|Dm9---|G---|Cmaj9---"] },
+                { "Am-Em-F-C": ["Am---|Em/G---|Fmaj7---|C/E---|Dm9---|Am/C---|B9---|E---"] },
+                { "Am-D-Am-D": ["Am9-D9/A-|Am9-D9/A-|Am9-D9/A-|Am9-D9/A-"] },
+                { "Am-G#m-Am-Cm": ["Am---|Am---|G#m---|G#m---|Am---|Am---|Cm---|Cm---"] }
+            ]
+        }
+    }
+    property var scoreData:{
+        "museScoreTemplates": [
+            {
+            "museScoreFile": "piano_4-4_01.musicxml",
+            "Instrument": "Piano Solo",
+            "timeSignature": [4, 4],
+            "tempo": ["q", 80],
+            "duration": 4,
+            "chordProgression": ["Am---|Dm9---|G9---|Cmaj9---"],
+            "character": ["Heroic"]
+            },
+            {
+            "museScoreFile": "piano_4-4_02.musicxml",
+            "Instrument": "Piano Solo",
+            "timeSignature": [4, 4],
+            "tempo": ["q", 80],
+            "duration": 4,
+            "chordProgression": ["Am---|Dm9---|G9---|Cmaj9---"],
+            "character": ["Delicate"]
+            },
+            {
+            "museScoreFile": "piano_4-4_03.musicxml",
+            "Instrument": "Piano Solo",
+            "timeSignature": [4, 4],
+            "tempo": ["q", 80],
+            "duration": 4,
+            "chordProgression": ["Am---|Dm9---|G9---|Cmaj9---"],
+            "character": ["Sad"]
+            },
+            {
+            "museScoreFile": "piano_4-4_04.musicxml",
+            "Instrument": "Piano Solo",
+            "timeSignature": [4, 4],
+            "tempo": ["q", 80],
+            "duration": 4,
+            "chordProgression": ["Am---|Dm9---|G9---|Cmaj9---"],
+            "character": ["Reflective"]
+            },
+            {
+            "museScoreFile": "piano_4-4_05.musicxml",
+            "Instrument": "Piano Solo",
+            "timeSignature": [4, 4],
+            "tempo": ["q", 80],
+            "duration": 4,
+            "chordProgression": ["Am---|Dm9---|G9---|Cmaj9---"],
+            "character": ["Romantic"]
+            },
+            {
+            "museScoreFile": "piano_4-4_06.musicxml",
+            "Instrument": "Piano Solo",
+            "timeSignature": [4, 4],
+            "tempo": ["q", 80],
+            "duration": 4,
+            "chordProgression": ["Am---|Dm9---|G9---|Cmaj9---"],
+            "character": ["Romantic"]
+            },
+            {
+            "museScoreFile": "piano_4-4_07.musicxml",
+            "Instrument": "Piano Solo",
+            "timeSignature": [4, 4],
+            "tempo": ["q", 80],
+            "duration": 4,
+            "chordProgression": ["Am---|Dm9---|G9---|Cmaj9---"],
+            "character": ["Adventurous"]
+            }
+        ]
+    }
+    function toDropdownModel(list) {
+        return list.map(function(item) {
+            return { text: item }
+        });
+    }
+
+    function chordProgressionKeys() {
+        return uiData.userInterface.chordProgression.map(function(item) {
+            return { text: Object.keys(item)[0] }
+        });
+    }
+
     function getNumMeasures(xmlText) {
         var measureRegex = /<measure[^>]*\bnumber="(\d+)"/g;
         var match;
@@ -130,6 +221,28 @@ MuseScore {
             anchors.margins: 10
             rowSpacing: 10
             columnSpacing: 20
+
+
+            Label { text: "Arrangement" }
+            StyledDropdown {
+                id: arrangement
+                model: toDropdownModel(uiData.userInterface.Instrument)
+                currentIndex: 0
+            }
+
+            Label { text: "Character" }
+            StyledDropdown {
+                id: character
+                model: toDropdownModel(uiData.userInterface.character)
+                currentIndex: 0
+            }
+
+            Label { text: "Chord Progression" }
+            StyledDropdown {
+                id: progression
+                model: chordProgressionKeys()
+                currentIndex: 0
+            }
             Label { text: "Insert Mode" }
             StyledDropdown {
                 id: insertMode
@@ -142,6 +255,8 @@ MuseScore {
                     currentIndex = index
                 }
             }
+
+
         
             Button {
                 id: generateButton
