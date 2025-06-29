@@ -28,12 +28,10 @@ MuseScore {
 
     function loadJsonData() {
         try {
-            // Read and parse UI data
             var uiJson = uiDataFile.read();
             if (uiJson) {
                 uiData = JSON.parse(uiJson);
             }
-
             var scoreJson = scoreDataFile.read();
             if (scoreJson) {
                 scoreData = JSON.parse(scoreJson);
@@ -69,12 +67,10 @@ MuseScore {
 
     function toDropdownModel(list) {
         
-        // Check if list exists and is an array
         if (!list || !Array.isArray(list)) {
             return [{ text: "No data available" }];
         }
         
-        // Filter out null, undefined, or empty values and convert to dropdown format
         var filteredList = list.filter(function(item) {
             return item !== null && item !== undefined && item !== "" && typeof item === "string";
         });
@@ -235,6 +231,7 @@ MuseScore {
         if (!scoreData.museScoreTemplates) return null;
         
         var templates = scoreData.museScoreTemplates;
+        var matchingTemplates = []; // Array to store all matching templates
         
         for (var i = 0; i < templates.length; i++) {
             var template = templates[i];
@@ -253,13 +250,27 @@ MuseScore {
             });
             
             if (matchingChords && matchingChords[progression].indexOf(templateProgression) !== -1) {
-                return template;
+                matchingTemplates.push(template); // Add to matching templates array
             }
         }
         
-        return null; // No match found
+        // If no matches found, return null
+        if (matchingTemplates.length === 0) {
+            console.log("No matching templates found");
+            return null;
+        }
+        
+        // If only one match, return it
+        if (matchingTemplates.length === 1) {
+            console.log("Found 1 matching template");
+            return matchingTemplates[0];
+        }
+        
+        // If multiple matches, randomly select one
+        var randomIndex = Math.floor(Math.random() * matchingTemplates.length);
+        console.log("Found", matchingTemplates.length, "matching templates, randomly selected index:", randomIndex);
+        return matchingTemplates[randomIndex];
     }
-
     FileIO {
         id: file
     }
@@ -272,7 +283,6 @@ MuseScore {
             rowSpacing: 10
             columnSpacing: 20
 
-            // Main UI - only visible when data is loaded
             Column {
                 visible: dataLoaded
                 Layout.fillWidth: true
@@ -281,7 +291,7 @@ MuseScore {
                 Label { text: "Arrangement" }
                 StyledDropdown {
                     id: arrangement
-                    model: [{ text: "Loading..." }]  // Default loading state
+                    model: [{ text: "Loading..." }] 
                     currentIndex: 0
                     onActivated: function(index, value) {
                         currentIndex = index    
@@ -291,7 +301,7 @@ MuseScore {
                 Label { text: "Character" }
                 StyledDropdown {
                     id: character
-                    model: [{ text: "Loading..." }]  // Default loading state
+                    model: [{ text: "Loading..." }]
                     currentIndex: 0
                     onActivated: function(index, value) {
                         currentIndex = index    
@@ -301,7 +311,7 @@ MuseScore {
                 Label { text: "Chord Progression" }
                 StyledDropdown {
                     id: progression
-                    model: [{ text: "Loading..." }]  // Default loading state
+                    model: [{ text: "Loading..." }] 
                     currentIndex: 0
                     onActivated: function(index, value) {
                         currentIndex = index    
@@ -328,12 +338,10 @@ MuseScore {
                     onClicked: {
 
 
-
                         var selectedInstrument = uiData.userInterface.Instrument[arrangement.currentIndex];
                         var selectedCharacter = uiData.userInterface.character[character.currentIndex];
                         var selectedProgression = Object.keys(uiData.userInterface.chordProgression[progression.currentIndex])[0];
-                        
-                        
+        
                         // Find matching template
                         var matchingTemplate = findMatchingTemplate(selectedInstrument, selectedCharacter, selectedProgression);
                         
