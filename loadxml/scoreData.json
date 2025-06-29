@@ -1,0 +1,67 @@
+{
+    "museScoreTemplates": [
+        {
+            "museScoreFile": "piano_4-4_01.musicxml",
+            "Instrument": "Piano Solo",
+            "timeSignature": [4, 4],
+            "tempo": ["q", 80],
+            "duration": 4,
+            "chordProgression": ["Am---|Dm9---|G9---|Cmaj9---"],
+            "character": ["Heroic"]
+        },
+        {
+            "museScoreFile": "piano_4-4_02.musicxml",
+            "Instrument": "Piano Solo",
+            "timeSignature": [4, 4],
+            "tempo": ["q", 80],
+            "duration": 4,
+            "chordProgression": ["Am---|Dm9---|G9---|Cmaj9---"],
+            "character": ["Delicate"]
+        },
+        {
+            "museScoreFile": "piano_4-4_03.musicxml",
+            "Instrument": "Piano Solo",
+            "timeSignature": [4, 4],
+            "tempo": ["q", 80],
+            "duration": 4,
+            "chordProgression": ["Am---|Dm9---|G9---|Cmaj9---"],
+            "character": ["Sad"]
+        },
+        {
+            "museScoreFile": "piano_4-4_04.musicxml",
+            "Instrument": "Piano Solo",
+            "timeSignature": [4, 4],
+            "tempo": ["q", 80],
+            "duration": 4,
+            "chordProgression": ["Am---|Dm9---|G9---|Cmaj9---"],
+            "character": ["Reflective"]
+        },
+        {
+            "museScoreFile": "piano_4-4_05.musicxml",
+            "Instrument": "Piano Solo",
+            "timeSignature": [4, 4],
+            "tempo": ["q", 80],
+            "duration": 4,
+            "chordProgression": ["Am---|Dm9---|G9---|Cmaj9---"],
+            "character": ["Romantic"]
+        },
+        {
+            "museScoreFile": "piano_4-4_06.musicxml",
+            "Instrument": "Piano Solo",
+            "timeSignature": [4, 4],
+            "tempo": ["q", 80],
+            "duration": 4,
+            "chordProgression": ["Am---|Dm9---|G9---|Cmaj9---"],
+            "character": ["Romantic"]
+        },
+        {
+            "museScoreFile": "piano_4-4_07.musicxml",
+            "Instrument": "Piano Solo",
+            "timeSignature": [4, 4],
+            "tempo": ["q", 80],
+            "duration": 4,
+            "chordProgression": ["Am---|Dm9---|G9---|Cmaj9---"],
+            "character": ["Adventurous"]
+        }
+    ]
+}
