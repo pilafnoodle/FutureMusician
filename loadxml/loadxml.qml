@@ -208,6 +208,35 @@ MuseScore {
         }
     }
 
+    function findMatchingTemplate(instrument, character, progression) {
+        var templates = scoreData.museScoreTemplates;
+        
+        for (var i = 0; i < templates.length; i++) {
+            var template = templates[i];
+            
+            // Check if instrument matches
+            if (template.Instrument !== instrument) continue;
+            
+            // Check if character matches (template.character is an array)
+            if (template.character.indexOf(character) === -1) continue;
+            
+            // Check if chord progression matches
+            var templateProgression = template.chordProgression[0]; // Get first chord progression
+            var progressionKey = Object.keys(uiData.userInterface.chordProgression.find(function(item) {
+                return Object.keys(item)[0] === progression;
+            }))[0];
+            
+            var matchingChords = uiData.userInterface.chordProgression.find(function(item) {
+                return Object.keys(item)[0] === progression;
+            });
+            
+            if (matchingChords && matchingChords[progression].indexOf(templateProgression) !== -1) {
+                return template;
+            }
+        }
+        
+        return null; // No match found
+    }
 
     FileIO {
             id: file
@@ -228,6 +257,9 @@ MuseScore {
                 id: arrangement
                 model: toDropdownModel(uiData.userInterface.Instrument)
                 currentIndex: 0
+                onActivated: function(index, value) {
+                    currentIndex = index    
+                }
             }
 
             Label { text: "Character" }
@@ -235,6 +267,9 @@ MuseScore {
                 id: character
                 model: toDropdownModel(uiData.userInterface.character)
                 currentIndex: 0
+                onActivated: function(index, value) {
+                    currentIndex = index    
+                }
             }
 
             Label { text: "Chord Progression" }
@@ -242,6 +277,9 @@ MuseScore {
                 id: progression
                 model: chordProgressionKeys()
                 currentIndex: 0
+                onActivated: function(index, value) {
+                    currentIndex = index    
+                }
             }
             Label { text: "Insert Mode" }
             StyledDropdown {
@@ -263,7 +301,22 @@ MuseScore {
                 text: qsTranslate("PrefsDialogBase", "Generate")
                 onClicked: {
 
-                    file.source = Qt.resolvedUrl("piano_4-4_04.musicxml");
+                    var selectedInstrument = uiData.userInterface.Instrument[arrangement.currentIndex];
+                    var selectedCharacter = uiData.userInterface.character[character.currentIndex];
+                    var selectedProgression = Object.keys(uiData.userInterface.chordProgression[progression.currentIndex])[0];
+                    
+                    // Find matching template
+                    var matchingTemplate = findMatchingTemplate(selectedInstrument, selectedCharacter, selectedProgression);
+                    
+                    if (!matchingTemplate) {
+                        console.log("No matching template found");
+                        return;
+                    }
+                    
+                    // Use the matched template file
+                    file.source = Qt.resolvedUrl(matchingTemplate.museScoreFile);
+
+                    //file.source = Qt.resolvedUrl("piano_4-4_04.musicxml");
                     var xml = file.read();
             
                     var notes = extractNotes(xml);
