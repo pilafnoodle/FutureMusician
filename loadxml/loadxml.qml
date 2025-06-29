@@ -12,6 +12,116 @@ MuseScore {
     width: 400
     height: 350
 
+    property var uiData: ({})
+    property var scoreData: ({})
+    property bool dataLoaded: false
+
+    FileIO {
+        id: uiDataFile
+        source: Qt.resolvedUrl("uiData.json")
+    }
+
+    FileIO {
+        id: scoreDataFile
+        source: Qt.resolvedUrl("scoreData.json")
+    }
+
+    function loadJsonData() {
+        try {
+            var uiJson = uiDataFile.read();
+            if (uiJson) {
+                uiData = JSON.parse(uiJson);
+            }
+            var scoreJson = scoreDataFile.read();
+            if (scoreJson) {
+                scoreData = JSON.parse(scoreJson);
+            }
+
+            dataLoaded = true;
+            updateDropdownModels();
+        } catch (e) {
+            dataLoaded = false;
+        }
+    }
+
+    function updateDropdownModels() {
+        if (dataLoaded && uiData.userInterface) {
+            
+            // Update arrangement dropdown
+            var arrangementData = uiData.userInterface.Instrument;
+            arrangement.model = toDropdownModel(arrangementData);
+            
+            // Update character dropdown
+            var characterData = uiData.userInterface.character;
+            character.model = toDropdownModel(characterData);
+            
+            // Update progression dropdown
+            var progressionData = chordProgressionKeys();
+            progression.model = progressionData;
+        }
+    }
+
+    Component.onCompleted: {
+        loadJsonData();
+    }
+
+    function toDropdownModel(list) {
+        
+        if (!list || !Array.isArray(list)) {
+            return [{ text: "No data available" }];
+        }
+        
+        var filteredList = list.filter(function(item) {
+            return item !== null && item !== undefined && item !== "" && typeof item === "string";
+        });
+        
+        if (filteredList.length === 0) {
+            return [{ text: "No valid options" }];
+        }
+        
+        var result = filteredList.map(function(item) {
+            return { text: String(item).trim() }; // Ensure it's a string and trim whitespace
+        });
+        
+       return result;
+    }
+
+    function chordProgressionKeys() {
+        if (!uiData.userInterface || !uiData.userInterface.chordProgression) {
+            return [{ text: "No progressions available" }];
+        }
+        
+        var progressions = uiData.userInterface.chordProgression;
+        
+        if (!Array.isArray(progressions)) {
+            return [{ text: "Invalid progression data" }];
+        }
+        
+        var result = [];
+        for (var i = 0; i < progressions.length; i++) {
+            var item = progressions[i];
+            if (item && typeof item === "object") {
+                var keys = Object.keys(item);
+                if (keys.length > 0) {
+                    var key = keys[0];
+                    if (key && key !== "" && typeof key === "string") {
+                        result.push({ text: key.trim() });
+                    }
+                }
+            }
+        }
+        
+        if (result.length === 0) {
+            return [{ text: "No valid progressions found" }];
+        }
+        
+        return result;
+    }
+
+    FileIO {
+        id: musicXmlFile
+    }
+
     function getNumMeasures(xmlText) {
         var measureRegex = /<measure[^>]*\bnumber="(\d+)"/g;
         var match;
@@ -117,60 +227,147 @@ MuseScore {
         }
     }
 
-
-    FileIO {
-            id: file
-            onError: console.log(msg)
+    function findMatchingTemplate(instrument, character, progression) {
+        if (!scoreData.museScoreTemplates) return null;
+        
+        var templates = scoreData.museScoreTemplates;
+        var matchingTemplates = []; // Array to store all matching templates
+        
+        for (var i = 0; i < templates.length; i++) {
+            var template = templates[i];
+            
+            // Check if instrument matches
+            if (template.Instrument !== instrument) continue;
+            
+            // Check if character matches (template.character is an array)
+            if (template.character.indexOf(character) === -1) continue;
+            
+            // Check if chord progression matches
+            var templateProgression = template.chordProgression[0]; // Get first chord progression
+            
+            var matchingChords = uiData.userInterface.chordProgression.find(function(item) {
+                return Object.keys(item)[0] === progression;
+            });
+            
+            if (matchingChords && matchingChords[progression].indexOf(templateProgression) !== -1) {
+                matchingTemplates.push(template); // Add to matching templates array
+            }
+        }
+        
+        // If no matches found, return null
+        if (matchingTemplates.length === 0) {
+            console.log("No matching templates found");
+            return null;
+        }
+        
+        // If only one match, return it
+        if (matchingTemplates.length === 1) {
+            console.log("Found 1 matching template");
+            return matchingTemplates[0];
+        }
+        
+        // If multiple matches, randomly select one
+        var randomIndex = Math.floor(Math.random() * matchingTemplates.length);
+        console.log("Found", matchingTemplates.length, "matching templates, randomly selected index:", randomIndex);
+        return matchingTemplates[randomIndex];
     }
-    Item{
+    FileIO {
+        id: file
+    }
 
+    Item {
         GridLayout {
             columns: 1
             anchors.fill: parent
             anchors.margins: 10
             rowSpacing: 10
             columnSpacing: 20
-            Label { text: "Insert Mode" }
-            StyledDropdown {
-                id: insertMode
-                model: [
-                    { text: "replace" },
-                    { text: "before" },
-                ]
-                currentIndex: 0
-                onActivated: function(index, value) {
-                    currentIndex = index
+
+            Column {
+                visible: dataLoaded
+                Layout.fillWidth: true
+                spacing: 10
+
+                Label { text: "Arrangement" }
+                StyledDropdown {
+                    id: arrangement
+                    model: [{ text: "Loading..." }] 
+                    currentIndex: 0
+                    onActivated: function(index, value) {
+                        currentIndex = index    
+                    }
                 }
-            }
+
+                Label { text: "Character" }
+                StyledDropdown {
+                    id: character
+                    model: [{ text: "Loading..." }]
+                    currentIndex: 0
+                    onActivated: function(index, value) {
+                        currentIndex = index    
+                    }
+                }
+
+                Label { text: "Chord Progression" }
+                StyledDropdown {
+                    id: progression
+                    model: [{ text: "Loading..." }] 
+                    currentIndex: 0
+                    onActivated: function(index, value) {
+                        currentIndex = index    
+                    }
+                }
+
+                Label { text: "Insert Mode" }
+                StyledDropdown {
+                    id: insertMode
+                    model: [
+                        { text: "replace" },
+                        { text: "before" },
+                    ]
+                    currentIndex: 0
+                    onActivated: function(index, value) {
+                        currentIndex = index
+                    }
+                }
+
+                Button {
+                    id: generateButton
+                    text: qsTranslate("PrefsDialogBase", "Generate")
+                    enabled: dataLoaded
+                    onClicked: {
+
+
+                        var selectedInstrument = uiData.userInterface.Instrument[arrangement.currentIndex];
+                        var selectedCharacter = uiData.userInterface.character[character.currentIndex];
+                        var selectedProgression = Object.keys(uiData.userInterface.chordProgression[progression.currentIndex])[0];
         
-            Button {
-                id: generateButton
-                text: qsTranslate("PrefsDialogBase", "Generate")
-                onClicked: {
+                        // Find matching template
+                        var matchingTemplate = findMatchingTemplate(selectedInstrument, selectedCharacter, selectedProgression);
+                        
 
-                    file.source = Qt.resolvedUrl("piano_4-4_04.musicxml");
-                    var xml = file.read();
-            
-                    var notes = extractNotes(xml);
-                    var cursor = curScore.newCursor();
-                    var numMeasures=getNumMeasures(xml);
+                        // Use the matched template file
+                        file.source = Qt.resolvedUrl(matchingTemplate.museScoreFile);
+                        var xml = file.read();
+                
+                        var notes = extractNotes(xml);
+                        var cursor = curScore.newCursor();
+                        var numMeasures = getNumMeasures(xml);
 
-                    curScore.startCmd();
+                        curScore.startCmd();
 
-                    //treble
-                    rewindToInsertLocation(cursor, numMeasures, insertMode.model[insertMode.currentIndex].text);
-                    insertNotes(cursor, notes.treble, 0);  
-                    
-                    //bass
-                    rewindToInsertLocation(cursor, numMeasures, insertMode.model[insertMode.currentIndex].text);
-                    insertNotes(cursor, notes.bass, 4); 
+                        //treble
+                        rewindToInsertLocation(cursor, numMeasures, insertMode.model[insertMode.currentIndex].text);
+                        insertNotes(cursor, notes.treble, 0);  
+                        
+                        //bass
+                        rewindToInsertLocation(cursor, numMeasures, insertMode.model[insertMode.currentIndex].text);
+                        insertNotes(cursor, notes.bass, 4); 
 
-                    curScore.endCmd();
-                    Qt.quit();
-
+                        curScore.endCmd();
+                        Qt.quit();
+                    }
                 }
-                
-                
             }
         }
     }
@@ -180,7 +377,5 @@ MuseScore {
             Qt.quit();
             return;
         }
-
-
     }
 }
