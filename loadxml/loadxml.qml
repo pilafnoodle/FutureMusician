@@ -82,41 +82,41 @@ MuseScore {
        return result;
     }
 
-    function chordProgressionKeys() {
-        if (!uiData.userInterface || !uiData.userInterface.chordProgression) {
-            return [{ text: "No progressions available" }];
-        }
+    // function chordProgressionKeys() {
+    //     if (!uiData.userInterface || !uiData.userInterface.chordProgression) {
+    //         return [{ text: "No progressions available" }];
+    //     }
 
-        var progressions = uiData.userInterface.chordProgression;
+    //     var progressions = uiData.userInterface.chordProgression;
 
-        if (!Array.isArray(progressions)) {
-            return [{ text: "Invalid progression data" }];
-        }
+    //     if (!Array.isArray(progressions)) {
+    //         return [{ text: "Invalid progression data" }];
+    //     }
 
-        var result = [];
-        for (var i = 0; i < progressions.length; i++) {
-            var item = progressions[i];
-            if (item && typeof item === "object") {
-                var keys = Object.keys(item);
-                if (keys.length > 0) {
-                    var key = keys[0];
-                    if (key && key !== "" && typeof key === "string") {
-                        result.push({ text: key.trim() });
-                    }
-                }
-            }
-        }
+    //     var result = [];
+    //     for (var i = 0; i < progressions.length; i++) {
+    //         var item = progressions[i];
+    //         if (item && typeof item === "object") {
+    //             var keys = Object.keys(item);
+    //             if (keys.length > 0) {
+    //                 var key = keys[0];
+    //                 if (key && key !== "" && typeof key === "string") {
+    //                     result.push({ text: key.trim() });
+    //                 }
+    //             }
+    //         }
+    //     }
 
-        if (result.length === 0) {
-            return [{ text: "No valid progressions found" }];
-        }
+    //     if (result.length === 0) {
+    //         return [{ text: "No valid progressions found" }];
+    //     }
 
-        return result;
-    }
+    //     return result;
+    // }
 
-    FileIO {
-        id: musicXmlFile
-    }
+    // FileIO {
+    //     id: musicXmlFile
+    // }
 
     function getNumMeasures(xmlText) {
         var measureRegex = /<measure[^>]*\bnumber="(\d+)"/g;
@@ -132,56 +132,56 @@ MuseScore {
         return max;
     }
 
-    function typeToDurationType(typeStr) {
-        switch(typeStr) {
-            case "whole": return 1;
-            case "half": return 2;
-            case "quarter": return 4;
-            case "eighth": return 8;
-            case "16th": return 16;
-            case "32nd": return 32;
-            default: return 0;
-        }
-    }
+    // function typeToDurationType(typeStr) {
+    //     switch(typeStr) {
+    //         case "whole": return 1;
+    //         case "half": return 2;
+    //         case "quarter": return 4;
+    //         case "eighth": return 8;
+    //         case "16th": return 16;
+    //         case "32nd": return 32;
+    //         default: return 0;
+    //     }
+    // }
 
-    function extractNotes(xmlText) {
-        var treble = [];
-        var bass = [];
+    // function extractNotes(xmlText) {
+    //     var treble = [];
+    //     var bass = [];
 
-        var noteRegex = /<note\b[^>]*>([\s\S]*?)<\/note>/g;
-        var match;
+    //     var noteRegex = /<note\b[^>]*>([\s\S]*?)<\/note>/g;
+    //     var match;
 
-        while ((match = noteRegex.exec(xmlText)) !== null) {
-            var noteXml = match[1];
+    //     while ((match = noteRegex.exec(xmlText)) !== null) {
+    //         var noteXml = match[1];
 
-            var stepMatch = /<step>([A-G])<\/step>/.exec(noteXml);
-            var octaveMatch = /<octave>(\d)<\/octave>/.exec(noteXml);
-            var durationMatch = /<duration>(\d+)<\/duration>/.exec(noteXml);
-            var staffMatch = /<staff>(\d)<\/staff>/.exec(noteXml);
-            var typeMatch = /<type>([^<]+)<\/type>/.exec(noteXml);
-            var stemMatch = /<stem>(up|down)<\/stem>/.exec(noteXml);
-            var dotMatch = noteXml.match(/<dot\s*[^>]*>/g);
+    //         var stepMatch = /<step>([A-G])<\/step>/.exec(noteXml);
+    //         var octaveMatch = /<octave>(\d)<\/octave>/.exec(noteXml);
+    //         var durationMatch = /<duration>(\d+)<\/duration>/.exec(noteXml);
+    //         var staffMatch = /<staff>(\d)<\/staff>/.exec(noteXml);
+    //         var typeMatch = /<type>([^<]+)<\/type>/.exec(noteXml);
+    //         var stemMatch = /<stem>(up|down)<\/stem>/.exec(noteXml);
+    //         var dotMatch = noteXml.match(/<dot\s*[^>]*>/g);
 
-            if (stepMatch && octaveMatch && durationMatch && staffMatch) {
-                var step = stepMatch[1];
-                var octave = parseInt(octaveMatch[1]);
-                var duration = parseInt(durationMatch[1]);
-                var staff = parseInt(staffMatch[1]);
-                var stepToSemitone = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
-                var midi = 12 * (octave + 1) + stepToSemitone[step];
-                var typeStr = typeMatch ? typeMatch[1] : "quarter";
-                var stemDirection = stemMatch ? stemMatch[1] : "up";  
-                var dots = dotMatch ? dotMatch.length : 0;
+    //         if (stepMatch && octaveMatch && durationMatch && staffMatch) {
+    //             var step = stepMatch[1];
+    //             var octave = parseInt(octaveMatch[1]);
+    //             var duration = parseInt(durationMatch[1]);
+    //             var staff = parseInt(staffMatch[1]);
+    //             var stepToSemitone = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+    //             var midi = 12 * (octave + 1) + stepToSemitone[step];
+    //             var typeStr = typeMatch ? typeMatch[1] : "quarter";
+    //             var stemDirection = stemMatch ? stemMatch[1] : "up";  
+    //             var dots = dotMatch ? dotMatch.length : 0;
 
-                var noteData = [midi, duration, typeStr,stemDirection,dots];
-                if (staff === 1)
-                    treble.push(noteData);
-                else if (staff === 2)
-                    bass.push(noteData);
-            }
-        }
-        return { treble: treble, bass: bass };
-    }
+    //             var noteData = [midi, duration, typeStr,stemDirection,dots];
+    //             if (staff === 1)
+    //                 treble.push(noteData);
+    //             else if (staff === 2)
+    //                 bass.push(noteData);
+    //         }
+    //     }
+    //     return { treble: treble, bass: bass };
+    // }
 
     function rewindToInsertLocation(cursor, numMeasures, insertModeText) {
         cursor.rewind(1);
@@ -199,29 +199,29 @@ MuseScore {
         }
     }
 
-    function insertNotes(cursor, noteList, track) {
-        cursor.track = track;
+    // function insertNotes(cursor, noteList, track) {
+    //     cursor.track = track;
 
-        for (var i = 0; i < noteList.length; i++) {
-            var note = noteList[i];
-            var midiPitch = note[0];
-            var typeStr = note[2];
-            var stemDir = note[3];
-            var dotCount = note[4];
-            var baseDur = typeToDurationType(typeStr);
-            var z = Math.pow(2, dotCount + 1) - 1;
-            var n = baseDur * Math.pow(2, dotCount);
-            cursor.setDuration(z, n);
-            cursor.addNote(midiPitch);
+    //     for (var i = 0; i < noteList.length; i++) {
+    //         var note = noteList[i];
+    //         var midiPitch = note[0];
+    //         var typeStr = note[2];
+    //         var stemDir = note[3];
+    //         var dotCount = note[4];
+    //         var baseDur = typeToDurationType(typeStr);
+    //         var z = Math.pow(2, dotCount + 1) - 1;
+    //         var n = baseDur * Math.pow(2, dotCount);
+    //         cursor.setDuration(z, n);
+    //         cursor.addNote(midiPitch);
 
-            var el = cursor.segment.elementAt(cursor.track);
-            if (el && el.type === Element.NOTE) {
-                var chord = el.parent;
-                chord.dots = dotCount;
-                el.stemDirection = (stemDir === "up") ? 1 : -1;
-            }
-        }
-    }
+    //         var el = cursor.segment.elementAt(cursor.track);
+    //         if (el && el.type === Element.NOTE) {
+    //             var chord = el.parent;
+    //             chord.dots = dotCount;
+    //             el.stemDirection = (stemDir === "up") ? 1 : -1;
+    //         }
+    //     }
+    // }
 
     function findMatchingTemplate(instrument, character, progression) {
         if (!scoreData.museScoreTemplates) return null;
@@ -260,6 +260,86 @@ MuseScore {
         var randomIndex = Math.floor(Math.random() * matchingTemplates.length);
         console.log("Found", matchingTemplates.length, "matching templates, randomly selected index:", randomIndex);
         return matchingTemplates[randomIndex];
+    }
+
+    function moveSelectionRight(byDuration) {
+        if (!curScore || !curScore.selection) {
+            console.log("No score or selection.");
+            return;
+        }
+
+        var dur = 4;  // Default duration base
+        var cursor = curScore.newCursor();
+        cursor.rewind(0);
+
+        while (cursor.segment) {
+            var element = cursor.element;
+            if (element && element.type === Element.TIMESIG) {
+                dur = element.denominator;
+                break;
+            }
+            cursor.next();
+        }
+
+        cursor = curScore.newCursor();
+        cursor.rewind(2); // end of selection
+        var endTick = cursor.tick;
+        var endStaff = cursor.staffIdx + 1;
+        var endTrack = endStaff * 4;
+
+        cursor.rewind(1); // start of selection
+        var startSegTick = curScore.selection.startSegment.tick;
+        var startTick = cursor.tick;
+        var startStaff = cursor.staffIdx;
+        var startTrack = startStaff * 4;
+
+        cmd("copy");
+
+        var elements = curScore.selection.elements;
+        for (var i in elements) {
+            removeElement(elements[i]);
+        }
+
+        for (var track = startTrack; track < endTrack; track++) {
+            cursor.track = track;
+            cursor.rewindToTick(startTick);
+            while (cursor.element && cursor.tick < endTick) {
+                var e = cursor.element;
+                var annotations = cursor.segment.annotations;
+
+                if (e.tuplet) {
+                    removeElement(e.tuplet);
+                } else {
+                    removeElement(e);
+                }
+
+                for (var i in annotations) {
+                    removeElement(annotations[i]);
+                }
+
+                cursor.next();
+            }
+        }
+
+        cursor.track = startTrack;
+        cursor.rewindToTick(startSegTick);
+
+        if (startSegTick != startTick) {
+            cursor.setDuration(2 * dur, dur * 2);
+            cursor.addRest();
+        } else {
+            cursor.setDuration(2 * dur, dur);
+            cursor.addRest();
+        }
+
+        if (cursor.element && cursor.element.type == Element.CHORD) {
+            curScore.selection.select(cursor.element.notes[0]);
+        } else {
+            curScore.selection.select(cursor.element);
+        }
+
+        cmd("paste");
+
     }
 
     FileIO {
@@ -327,26 +407,9 @@ MuseScore {
                     text: qsTranslate("PrefsDialogBase", "Generate")
                     enabled: dataLoaded
                     onClicked: {
-                        var selectedInstrument = uiData.userInterface.Instrument[arrangement.currentIndex];
-                        var selectedCharacter = uiData.userInterface.character[character.currentIndex];
-                        var selectedProgression = Object.keys(uiData.userInterface.chordProgression[progression.currentIndex])[0];
-
-                        var matchingTemplate = findMatchingTemplate(selectedInstrument, selectedCharacter, selectedProgression);
-
-                        file.source = Qt.resolvedUrl(matchingTemplate.museScoreFile);
-                        var xml = file.read();
-
-                        var notes = extractNotes(xml);
-                        var cursor = curScore.newCursor();
-                        var numMeasures = getNumMeasures(xml);
-
                         curScore.startCmd();
 
-                        rewindToInsertLocation(cursor, numMeasures, insertMode.model[insertMode.currentIndex].text);
-                        insertNotes(cursor, notes.treble, 0);  
-
-                        rewindToInsertLocation(cursor, numMeasures, insertMode.model[insertMode.currentIndex].text);
-                        insertNotes(cursor, notes.bass, 4); 
+                        moveSelectionRight(8);
 
                         curScore.endCmd();
                         Qt.quit();
