@@ -183,21 +183,103 @@ MuseScore {
         return { treble: treble, bass: bass };
     }
 
-    function rewindToInsertLocation(cursor, numMeasures, insertModeText) {
-        cursor.rewind(1);
-        if (insertModeText === "before") {
-            var measure = cursor.measure;
-            for (var i = 0; i < numMeasures; ++i) {
-                if (measure && measure.prevMeasure)
-                    measure = measure.prevMeasure;
-                else
-                    break;
+    function moveSelectionRight(byDuration) {
+
+        var dur = 4;  // Default duration base
+        var cursor = curScore.newCursor();
+        cursor.rewind(0);
+
+        while (cursor.segment) {
+            var element = cursor.element;
+            if (element && element.type === Element.TIMESIG) {
+                dur = element.denominator;
+                break;
             }
-            var targetTick = measure ? measure.firstSegment.tick : 0;
-            cursor.rewind(0);
-            cursor.rewindToTick(targetTick);
+            cursor.next();
         }
+
+        cursor = curScore.newCursor();
+        cursor.rewind(2); // end of selection
+        var endTick = cursor.tick;
+        var endStaff = cursor.staffIdx + 1;
+        var endTrack = endStaff * 4;
+
+        cursor.rewind(1); // start of selection
+        var startSegTick = curScore.selection.startSegment.tick;
+        var startTick = cursor.tick;
+        var startStaff = cursor.staffIdx;
+        var startTrack = startStaff * 4;
+
+
+        cmd("copy");
+
+        var elements = curScore.selection.elements;
+        for (var i in elements) {
+            removeElement(elements[i]);
+        }
+
+        for (var track = startTrack; track < endTrack; track++) {
+            cursor.track = track;
+            cursor.rewindToTick(startTick);
+            while (cursor.element && cursor.tick < endTick) {
+                var e = cursor.element;
+                var annotations = cursor.segment.annotations;
+
+                if (e.tuplet) {
+                    removeElement(e.tuplet);
+                } else {
+                    removeElement(e);
+                }
+
+                for (var i in annotations) {
+                    removeElement(annotations[i]);
+                }
+
+                cursor.next();
+            }
+        }
+
+        cursor.track = startTrack;
+        cursor.rewindToTick(startSegTick);
+
+        if (startSegTick != startTick) {
+            cursor.setDuration(2 * dur, dur * 2);
+            cursor.addRest();
+        } else {
+            cursor.setDuration(2 * dur, dur);
+            cursor.addRest();
+        }
+
+        if (cursor.element && cursor.element.type == Element.CHORD) {
+            curScore.selection.select(cursor.element.notes[0]);
+        } else {
+            curScore.selection.select(cursor.element);
+        }
+
+        cmd("paste");
     }
+
+
+function rewindToInsertLocation(cursor, numMeasures, insertModeText) {
+    cursor.rewind(1);
+    if (insertModeText === "before") {
+        //var isAtBeginning = (cursor.tick === 0 || cursor.measure === curScore.firstMeasure);
+
+            // Define selection range: from start to end of score
+       
+            // Select entire score
+            //curScore.selection.selectRange(selStart, selEnd);
+
+            // Append extra space to make room
+            //curScore.appendMeasures(numMeasures);
+
+            // Now shift it
+            moveSelectionRight(numMeasures);
+
+            // Move cursor back to beginning
+        }
+    
+}
 
     function insertNotes(cursor, noteList, track) {
         cursor.track = track;
@@ -288,7 +370,6 @@ MuseScore {
                         currentIndex = index    
                     }
                 }
-
                 Label { text: "Character" }
                 StyledDropdown {
                     id: character
@@ -298,7 +379,6 @@ MuseScore {
                         currentIndex = index    
                     }
                 }
-
                 Label { text: "Chord Progression" }
                 StyledDropdown {
                     id: progression
@@ -308,7 +388,6 @@ MuseScore {
                         currentIndex = index    
                     }
                 }
-
                 Label { text: "Insert Mode" }
                 StyledDropdown {
                     id: insertMode
@@ -342,11 +421,16 @@ MuseScore {
 
                         curScore.startCmd();
 
-                        rewindToInsertLocation(cursor, numMeasures, insertMode.model[insertMode.currentIndex].text);
-                        insertNotes(cursor, notes.treble, 0);  
+                        cursor.rewind(0);
+                        moveSelectionRight(4);
 
-                        rewindToInsertLocation(cursor, numMeasures, insertMode.model[insertMode.currentIndex].text);
-                        insertNotes(cursor, notes.bass, 4); 
+
+                        // rewindToInsertLocation(cursor, numMeasures, insertMode.model[insertMode.currentIndex].text);
+                        //insertNotes(cursor, notes.treble, 0);  
+
+
+                        // rewindToInsertLocation(cursor, numMeasures, insertMode.model[insertMode.currentIndex].text);
+                        // insertNotes(cursor, notes.bass, 4); 
 
                         curScore.endCmd();
                         Qt.quit();

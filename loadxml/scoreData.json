@@ -7,7 +7,7 @@
             "tempo": ["q", 80],
             "duration": 4,
             "chordProgression": ["Am---|Dm9---|G9---|Cmaj9---"],
-	        "character": ["Delicate", "Peaceful", "Reflective", "Romantic", "Sad"]
+	        "character": ["Adventurous","Delicate", "Peaceful", "Reflective", "Romantic", "Sad"]
         },
         {
             "museScoreFile": "piano_4-4_02.musicxml",
@@ -16,7 +16,7 @@
             "tempo": ["q", 80],
             "duration": 4,
             "chordProgression": ["Am---|Dm9---|G9---|Cmaj9---"],
-            "character": ["Delicate", "Peaceful", "Reflective", "Romantic", "Sad"]
+            "character": ["Adventurous","Delicate", "Peaceful", "Reflective", "Romantic", "Sad"]
         },
         {
             "museScoreFile": "piano_4-4_03.musicxml",
@@ -25,7 +25,7 @@
             "tempo": ["q", 80],
             "duration": 4,
             "chordProgression": ["Am---|Dm9---|G9---|Cmaj9---"],
-            "character": ["Delicate", "Peaceful", "Reflective", "Romantic", "Sad"]
+            "character": ["Adventurous","Delicate", "Peaceful", "Reflective", "Romantic", "Sad"]
         },
         {
             "museScoreFile": "piano_4-4_04.musicxml",
@@ -34,7 +34,7 @@
             "tempo": ["q", 80],
             "duration": 4,
             "chordProgression": ["Am---|Dm9---|G9---|Cmaj9---"],
-            "character": ["Delicate", "Peaceful", "Reflective", "Romantic", "Sad"]
+            "character": ["Adventurous","Delicate", "Peaceful", "Reflective", "Romantic", "Sad"]
         },
         {
             "museScoreFile": "piano_4-4_05.musicxml",
