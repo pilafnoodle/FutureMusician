@@ -262,6 +262,34 @@ MuseScore {
         return matchingTemplates[randomIndex];
     }
 
+    function getSelection() {
+		var cursor = curScore.newCursor();
+		cursor.rewind(1);
+		if (!cursor.segment) {
+			return null;
+		}
+		var selection = {
+			cursor: cursor,
+			startTick: cursor.tick,
+			endTick: null,
+			startStaff: cursor.staffIdx,
+			endStaff: null,
+			startTrack: null,
+			endTrack: null
+		}
+		cursor.rewind(2)
+		selection.endStaff = cursor.staffIdx + 1;
+		if (cursor.tick == 0) {
+			selection.endTick = curScore.lastSegment.tick + 1;
+		} else {
+			selection.endTick = cursor.tick;
+		}
+		selection.startTrack = selection.startStaff * 4;
+		selection.endTrack = selection.endStaff * 4;
+		return selection;
+	}
+
+
     FileIO {
         id: file
     }
@@ -331,9 +359,11 @@ MuseScore {
                         var selectedCharacter = uiData.userInterface.character[character.currentIndex];
                         var selectedProgression = Object.keys(uiData.userInterface.chordProgression[progression.currentIndex])[0];
 
-                        var matchingTemplate = findMatchingTemplate(selectedInstrument, selectedCharacter, selectedProgression);
 
                         var matchChords=false;
+
+                        var matchingTemplate = findMatchingTemplate(selectedInstrument, selectedCharacter, selectedProgression);
+
 
                         if(matchingTemplate===-1){
                             file.source = Qt.resolvedUrl("piano_4-4_01.musicxml"); // default file if no chords match
@@ -342,6 +372,7 @@ MuseScore {
 
                         }else{
                             file.source = Qt.resolvedUrl(matchingTemplate.museScoreFile);
+                            matchChords=false;
                         }
                         
                         var xml = file.read();  // Am---|Dm9---|G9---|Cmaj9---
@@ -359,12 +390,15 @@ MuseScore {
                         insertNotes(cursor, notes.bass, 4); 
 
                         if(matchChords){
-
                             const target = ["Am","F","C","G"]; //selectedProgression.split("-");           
                             const existing = ["Am","Dm9","G9","Cmaj7"];              // as given
                             const measures = 4;
-                        
+
+                            var selection = getSelection();
+                            //mapOverSelection(selection);
+
                         }
+                    
 
                         curScore.endCmd();
                         Qt.quit();
@@ -373,6 +407,7 @@ MuseScore {
             }
         }
     }
+    
 
     onRun: {
         if (!curScore) {
