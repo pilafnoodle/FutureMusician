@@ -14,8 +14,6 @@ MuseScore {
 
     property var uiData: ({})
     property var scoreData: ({})
-    property var chordToMidiData: ({})
-
     property bool dataLoaded: false
 
     FileIO {
@@ -27,10 +25,6 @@ MuseScore {
         id: scoreDataFile
         source: Qt.resolvedUrl("scoreDataTest.json")
     }
-    FileIO {
-        id: chordToMidiFile
-        source: Qt.resolvedUrl("chordSymboltoMIDI.json")
-    }
 
     function loadJsonData() {
         try {
@@ -41,11 +35,6 @@ MuseScore {
             var scoreJson = scoreDataFile.read();
             if (scoreJson) {
                 scoreData = JSON.parse(scoreJson);
-            }
-
-            var chordToMidiJson = chordToMidiFile.read();
-            if (chordToMidiJson) {
-                chordToMidiData = JSON.parse(chordToMidiJson);
             }
 
             dataLoaded = true;
@@ -344,7 +333,7 @@ MuseScore {
 
                         var matchingTemplate = findMatchingTemplate(selectedInstrument, selectedCharacter, selectedProgression);
 
-                        bool matchChords=false;
+                        var matchChords=false;
 
                         if(matchingTemplate===-1){
                             file.source = Qt.resolvedUrl("piano_4-4_01.musicxml"); // default file if no chords match
@@ -355,44 +344,31 @@ MuseScore {
                             file.source = Qt.resolvedUrl(matchingTemplate.museScoreFile);
                         }
                         
-                        // var xml = file.read();  // Am---|Dm9---|G9---|Cmaj9---
+                        var xml = file.read();  // Am---|Dm9---|G9---|Cmaj9---
 
-                        // var notes = extractNotes(xml);
-                        // var cursor = curScore.newCursor();
-                        // var numMeasures = getNumMeasures(xml);
+                        var notes = extractNotes(xml);
+                        var cursor = curScore.newCursor();
+                        var numMeasures = getNumMeasures(xml);
 
                         curScore.startCmd();
 
-                        // rewindToInsertLocation(cursor, numMeasures, insertMode.model[insertMode.currentIndex].text);
-                        // insertNotes(cursor, notes.treble, 0);  
+                        rewindToInsertLocation(cursor, numMeasures, insertMode.model[insertMode.currentIndex].text);
+                        insertNotes(cursor, notes.treble, 0);  
 
-                        // rewindToInsertLocation(cursor, numMeasures, insertMode.model[insertMode.currentIndex].text);
-                        // insertNotes(cursor, notes.bass, 4); 
-                    
-                        // const target = ["Am","F","C","G"]; //selectedProgression.split("-");           
-                        // const existing = ["Am","Dm9","G9","Cmaj7"];              // as given
-                        // const measures = 4;
+                        rewindToInsertLocation(cursor, numMeasures, insertMode.model[insertMode.currentIndex].text);
+                        insertNotes(cursor, notes.bass, 4); 
 
-                        // cursor.rewind(1); // go to selection start
+                        if(matchChords){
 
-                        // for (let m = 0; m < 4; m++) {
-                        //     const measureStart = cursor.measure;
-                        //     if (["Am","F","C","G"][m] !== ["Am","Dm9","G9","Cmaj7"][m]) {
-                        //         while (cursor.segment && cursor.measure === measureStart) {
-                        //             const el = cursor.element;
-                        //             if (el && el.type === Element.NOTE) {
-                        //                 el.pitch = 60;
-                        //                 el.accidentalType = Accidental.NATURAL;
-                        //             }
-                        //             cursor.next();
-                        //         }
-                        //     }
-                        //     cursor.nextMeasure();
-                        // }
+                            const target = ["Am","F","C","G"]; //selectedProgression.split("-");           
+                            const existing = ["Am","Dm9","G9","Cmaj7"];              // as given
+                            const measures = 4;
+                        
+                        }
 
-                        curScore.endCmd();  // finish undo block
+                        curScore.endCmd();
+                        Qt.quit();
                     }
-
                 }
             }
         }
