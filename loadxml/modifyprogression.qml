@@ -270,67 +270,15 @@ MuseScore {
     function getExistingChordProgression() {
         // For now, return a simple 4-measure progression
         // In a real implementation, this would analyze the current score
-        return ["Am", "Dm9", "G9", "Cmaj9"];
+        return ["Am", "Dm9", "G9", "Cmaj7"];
     }
     
     function getTargetChordProgression(selectedProgression) {
-        var selectedProgressionKey = Object.keys(uiData.userInterface.chordProgression[progression.currentIndex])[0];
-        return selectedProgressionKey.split("-");        return 
-    }
-    
-    function replaceChordProgressions(existingProgression, targetProgression) {
 
         
-        var differentMeasures = [];
-        for (var i = 0; i < 4; i++) {
-            if (existingProgression[i] !== targetProgression[i]) {
-                differentMeasures.push(i + 1); // Measure numbers are 1-based
-            }
-        }
-        
-        console.log("Different measures:", differentMeasures);
-        
-        if (differentMeasures.length === 0) {
-            console.log("No differences found, no changes needed");
-            return;
-        }
-        
-        // Replace notes in different measures with C
-        replaceMeasuresWithC(differentMeasures);
+        return ["C", "C", "C", "C"];
     }
     
-    function replaceMeasuresWithC(measureNumbers) {
-        var cursor = curScore.newCursor();
-        cursor.rewind(0); // Go to beginning
-        
-        for (var i = 0; i < measureNumbers.length; i++) {
-            var measureNum = measureNumbers[i];
-            console.log("Replacing measure", measureNum, "with C");
-            
-            // Navigate to the specific measure
-            cursor.rewind(0);
-            var currentMeasure = 1;
-            while (currentMeasure < measureNum && cursor.nextMeasure()) {
-                currentMeasure++;
-            }
-            
-            if (currentMeasure === measureNum) {
-                // Process all segments in this measure
-                var startTick = cursor.tick;
-                var endTick = cursor.measure.lastSegment.tick + cursor.measure.lastSegment.ticklen;
-                
-                for (var segment = cursor.segment; segment && segment.tick < endTick; segment = segment.next) {
-                    for (var track = 0; track < curScore.nstaves * 4; track++) {
-                        var element = segment.elementAt(track);
-                        if (element && element.type === Element.CHORD) {
-                            replaceWithC(element);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     // Simple note replacement function
     function getSelection() {
         var cursor = curScore.newCursor();
@@ -369,7 +317,7 @@ MuseScore {
             for (var track = selection.startTrack; track < selection.endTrack; track++) {
                 var element = segment.elementAt(track);
                 if (element) {
-                    if (!filter || filter(element)) {
+                    if (filter(element)) {//if element
                         replaceWithC(element);
                     }
                 }
@@ -509,44 +457,17 @@ MuseScore {
                         rewindToInsertLocation(cursor, numMeasures, insertMode.model[insertMode.currentIndex].text);
                         insertNotes(cursor, notes.bass, 4); 
 
-                        if(matchChords){
-                            var selection = getSelection();
-                            if (selection) {
-                                mapOverSelection(selection, filterNotes);
-                            }
-                        }
-
-                        curScore.endCmd();
-                        Qt.quit();
-                    }
-                }
-
-                Button {
-                    id: replaceOnlyButton
-                    text: "Replace Notes with C Only"
-                    Layout.columnSpan: 2
-                    onClicked: {
+                        // Replace all notes with C
                         var selection = getSelection();
-                        if (!selection) {
-                            console.log("No selection found");
-                            return;
+                        if (selection) {
+                            mapOverSelection(selection, filterNotes);
                         }
-                        
-                        curScore.startCmd();
-                        mapOverSelection(selection, filterNotes);
+
                         curScore.endCmd();
                         Qt.quit();
                     }
                 }
 
-                Button {
-                    id: cancelButton
-                    text: "Cancel"
-                    Layout.columnSpan: 2
-                    onClicked: {
-                        Qt.quit();
-                    }
-                }
             }
         }
     }
