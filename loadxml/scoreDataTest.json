@@ -1,0 +1,22 @@
+{
+    "museScoreTemplates": [
+        {
+            "museScoreFile": "piano_4-4_01.musicxml",
+            "Instrument": "Piano Solo",
+            "timeSignature": [4, 4],
+            "tempo": ["q", 80],
+            "duration": 4,
+            "chordProgression": ["Am---|Dm9---|G9---|Cmaj9---"],
+	        "character": ["Delicate", "Peaceful", "Reflective", "Romantic", "Sad"]
+        },
+        {
+            "museScoreFile": "piano_4-4_07.musicxml",
+            "Instrument": "Piano Solo",
+            "timeSignature": [4, 4],
+            "tempo": ["q", 80],
+            "duration": 4,
+            "chordProgression": ["Am---|Dm9---|G9---|Cmaj9---"],
+            "character": ["Delicate", "Peaceful", "Reflective", "Romantic", "Sad"]
+        }
+    ]
+}
