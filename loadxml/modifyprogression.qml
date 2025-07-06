@@ -1,16 +1,19 @@
-import QtQuick 2.0
-import QtQuick.Controls 2.2
-import QtQuick.Layouts 1.1
+import QtQuick 2.15
+import QtQuick.Controls 2.15
+import QtQuick.Layouts 1.15
 import MuseScore 3.0
 import Muse.UiComponents 1.0
 import FileIO 3.0
 
 MuseScore {
+    version: "3.0.2"
+    title: "modify chord progression"
+    description: "Load XML notes and replace chord notes with C"
     menuPath: "load xml notes"
     pluginType: "dialog"
 
-    width: 400
-    height: 350
+    width: 450
+    height: 400
 
     property var uiData: ({})
     property var scoreData: ({})
@@ -26,6 +29,11 @@ MuseScore {
         source: Qt.resolvedUrl("scoreDataTest.json")
     }
 
+    FileIO {
+        id: file
+    }
+
+    // Load JSON data functions
     function loadJsonData() {
         try {
             var uiJson = uiDataFile.read();
@@ -46,7 +54,6 @@ MuseScore {
 
     function updateDropdownModels() {
         if (dataLoaded && uiData.userInterface) {
-            
             var arrangementData = uiData.userInterface.Instrument;
             arrangement.model = toDropdownModel(arrangementData);
 
@@ -114,10 +121,7 @@ MuseScore {
         return result;
     }
 
-    FileIO {
-        id: musicXmlFile
-    }
-
+    // XML Processing functions
     function getNumMeasures(xmlText) {
         var measureRegex = /<measure[^>]*\bnumber="(\d+)"/g;
         var match;
@@ -173,7 +177,7 @@ MuseScore {
                 var stemDirection = stemMatch ? stemMatch[1] : "up";  
                 var dots = dotMatch ? dotMatch.length : 0;
 
-                var noteData = [midi, duration, typeStr,stemDirection,dots];
+                var noteData = [midi, duration, typeStr, stemDirection, dots];
                 if (staff === 1)
                     treble.push(noteData);
                 else if (staff === 2)
@@ -262,152 +266,314 @@ MuseScore {
         return matchingTemplates[randomIndex];
     }
 
-    function getSelection() {
-		var cursor = curScore.newCursor();
-		cursor.rewind(1);
-		if (!cursor.segment) {
-			return null;
-		}
-		var selection = {
-			cursor: cursor,
-			startTick: cursor.tick,
-			endTick: null,
-			startStaff: cursor.staffIdx,
-			endStaff: null,
-			startTrack: null,
-			endTrack: null
-		}
-		cursor.rewind(2)
-		selection.endStaff = cursor.staffIdx + 1;
-		if (cursor.tick == 0) {
-			selection.endTick = curScore.lastSegment.tick + 1;
-		} else {
-			selection.endTick = cursor.tick;
-		}
-		selection.startTrack = selection.startStaff * 4;
-		selection.endTrack = selection.endStaff * 4;
-		return selection;
-	}
-
-
-    FileIO {
-        id: file
+    // Chord progression functions
+    function getExistingChordProgression() {
+        // For now, return a simple 4-measure progression
+        // In a real implementation, this would analyze the current score
+        return ["C", "Am", "F", "G"];
+    }
+    
+    function getTargetChordProgression(selectedProgression) {
+        // Get the target chord progression from the selected progression
+        if (!uiData.userInterface || !uiData.userInterface.chordProgression) {
+            return ["C", "C", "C", "C"];
+        }
+        
+        var progressions = uiData.userInterface.chordProgression;
+        var matchingProgression = progressions.find(function(item) {
+            return Object.keys(item)[0] === selectedProgression;
+        });
+        
+        if (matchingProgression) {
+            var chords = matchingProgression[selectedProgression];
+            // Return first 4 chords or pad with C if less than 4
+            var result = [];
+            for (var i = 0; i < 4; i++) {
+                if (i < chords.length) {
+                    result.push(chords[i]);
+                } else {
+                    result.push("C");
+                }
+            }
+            return result;
+        }
+        
+        return ["C", "C", "C", "C"];
+    }
+    
+    function replaceChordProgressions(existingProgression, targetProgression) {
+        console.log("Existing progression:", existingProgression);
+        console.log("Target progression:", targetProgression);
+        
+        // Find measures where chord progressions differ
+        var differentMeasures = [];
+        for (var i = 0; i < 4; i++) {
+            if (existingProgression[i] !== targetProgression[i]) {
+                differentMeasures.push(i + 1); // Measure numbers are 1-based
+            }
+        }
+        
+        console.log("Different measures:", differentMeasures);
+        
+        if (differentMeasures.length === 0) {
+            console.log("No differences found, no changes needed");
+            return;
+        }
+        
+        // Replace notes in different measures with C
+        replaceMeasuresWithC(differentMeasures);
+    }
+    
+    function replaceMeasuresWithC(measureNumbers) {
+        var cursor = curScore.newCursor();
+        cursor.rewind(0); // Go to beginning
+        
+        for (var i = 0; i < measureNumbers.length; i++) {
+            var measureNum = measureNumbers[i];
+            console.log("Replacing measure", measureNum, "with C");
+            
+            // Navigate to the specific measure
+            cursor.rewind(0);
+            var currentMeasure = 1;
+            while (currentMeasure < measureNum && cursor.nextMeasure()) {
+                currentMeasure++;
+            }
+            
+            if (currentMeasure === measureNum) {
+                // Process all segments in this measure
+                var startTick = cursor.tick;
+                var endTick = cursor.measure.lastSegment.tick + cursor.measure.lastSegment.ticklen;
+                
+                for (var segment = cursor.segment; segment && segment.tick < endTick; segment = segment.next) {
+                    for (var track = 0; track < curScore.nstaves * 4; track++) {
+                        var element = segment.elementAt(track);
+                        if (element && element.type === Element.CHORD) {
+                            replaceWithC(element);
+                        }
+                    }
+                }
+            }
+        }
     }
 
+    // Simple note replacement function
+    function getSelection() {
+        var cursor = curScore.newCursor();
+        cursor.rewind(1);
+        if (!cursor.segment) {
+            return null;
+        }
+        var selection = {
+            cursor: cursor,
+            startTick: cursor.tick,
+            endTick: null,
+            startStaff: cursor.staffIdx,
+            endStaff: null,
+            startTrack: null,
+            endTrack: null
+        };
+        cursor.rewind(2);
+        selection.endStaff = cursor.staffIdx + 1;
+        if (cursor.tick == 0) {
+            selection.endTick = curScore.lastSegment.tick + 1;
+        } else {
+            selection.endTick = cursor.tick;
+        }
+        selection.startTrack = selection.startStaff * 4;
+        selection.endTrack = selection.endStaff * 4;
+        return selection;
+    }
+
+    function mapOverSelection(selection, filter) {
+        selection.cursor.rewind(1);
+        for (
+            var segment = selection.cursor.segment;
+            segment && segment.tick < selection.endTick;
+            segment = segment.next
+        ) {
+            for (var track = selection.startTrack; track < selection.endTrack; track++) {
+                var element = segment.elementAt(track);
+                if (element) {
+                    if (!filter || filter(element)) {
+                        replaceWithC(element);
+                    }
+                }
+            }
+        }
+    }
+
+    function filterNotes(element) {
+        return element.type == Element.CHORD;
+    }
+
+    function replaceWithC(element) {
+        if (!element.notes || element.notes.length === 0) {
+            return;
+        }
+        
+        // Replace all notes in the chord with C4 (MIDI 60)
+        for (var i = 0; i < element.notes.length; i++) {
+            element.notes[i].pitch = 60; // C4
+        }
+    }
+
+    // UI
     Item {
-        GridLayout {
-            columns: 1
+        anchors.fill: parent
+
+        ScrollView {
             anchors.fill: parent
             anchors.margins: 10
-            rowSpacing: 10
-            columnSpacing: 20
+            
+            GridLayout {
+                columns: 2
+                width: parent.width
+                columnSpacing: 10
+                rowSpacing: 10
 
-            Column {
-                visible: dataLoaded
-                Layout.fillWidth: true
-                spacing: 10
+                // XML Loading Section
+                Label {
+                    text: "XML Loading"
+                    font.bold: true
+                    Layout.columnSpan: 2
+                }
 
-                Label { text: "Arrangement" }
+                Label { 
+                    text: "Arrangement"
+                    visible: dataLoaded
+                }
                 StyledDropdown {
                     id: arrangement
-                    model: [{ text: "Loading..." }] 
+                    model: [{ text: "Loading..." }]
                     currentIndex: 0
+                    visible: dataLoaded
                     onActivated: function(index, value) {
-                        currentIndex = index    
+                        currentIndex = index;
                     }
                 }
 
-                Label { text: "Character" }
+                Label { 
+                    text: "Character"
+                    visible: dataLoaded
+                }
                 StyledDropdown {
                     id: character
                     model: [{ text: "Loading..." }]
                     currentIndex: 0
+                    visible: dataLoaded
                     onActivated: function(index, value) {
-                        currentIndex = index    
+                        currentIndex = index;
                     }
                 }
 
-                Label { text: "Chord Progression" }
+                Label { 
+                    text: "Chord Progression"
+                    visible: dataLoaded
+                }
                 StyledDropdown {
                     id: progression
-                    model: [{ text: "Loading..." }] 
+                    model: [{ text: "Loading..." }]
                     currentIndex: 0
+                    visible: dataLoaded
                     onActivated: function(index, value) {
-                        currentIndex = index    
+                        currentIndex = index;
                     }
                 }
 
-                Label { text: "Insert Mode" }
+                Label { 
+                    text: "Insert Mode"
+                    visible: dataLoaded
+                }
                 StyledDropdown {
                     id: insertMode
                     model: [
                         { text: "replace" },
-                        { text: "before" },
+                        { text: "before" }
                     ]
                     currentIndex: 0
+                    visible: dataLoaded
                     onActivated: function(index, value) {
-                        currentIndex = index
+                        currentIndex = index;
                     }
                 }
 
+                // Buttons
                 Button {
                     id: generateButton
-                    text: qsTranslate("PrefsDialogBase", "Generate")
+                    text: "Generate & Transform Chord Progressions"
                     enabled: dataLoaded
+                    Layout.columnSpan: 2
+                    Layout.topMargin: 20
                     onClicked: {
                         var selectedInstrument = uiData.userInterface.Instrument[arrangement.currentIndex];
                         var selectedCharacter = uiData.userInterface.character[character.currentIndex];
                         var selectedProgression = Object.keys(uiData.userInterface.chordProgression[progression.currentIndex])[0];
 
-
-                        var matchChords=false;
-
+                        var matchChords = false;
                         var matchingTemplate = findMatchingTemplate(selectedInstrument, selectedCharacter, selectedProgression);
 
-
-                        if(matchingTemplate===-1){
-                            file.source = Qt.resolvedUrl("piano_4-4_01.musicxml"); // default file if no chords match
-                            //modify this file in code!
-                            matchChords=true;
-
-                        }else{
+                        if (matchingTemplate === -1) {
+                            file.source = Qt.resolvedUrl("piano_4-4_01.musicxml");
+                            matchChords = true;
+                        } else {
                             file.source = Qt.resolvedUrl(matchingTemplate.museScoreFile);
-                            matchChords=false;
+                            matchChords = false;
                         }
                         
-                        var xml = file.read();  // Am---|Dm9---|G9---|Cmaj9---
-
+                        var xml = file.read();
                         var notes = extractNotes(xml);
                         var cursor = curScore.newCursor();
                         var numMeasures = getNumMeasures(xml);
 
                         curScore.startCmd();
 
+                        // Insert notes
                         rewindToInsertLocation(cursor, numMeasures, insertMode.model[insertMode.currentIndex].text);
                         insertNotes(cursor, notes.treble, 0);  
 
                         rewindToInsertLocation(cursor, numMeasures, insertMode.model[insertMode.currentIndex].text);
                         insertNotes(cursor, notes.bass, 4); 
 
-                        if(matchChords){
-                            const target = ["Am","F","C","G"]; //selectedProgression.split("-");           
-                            const existing = ["Am","Dm9","G9","Cmaj7"];              // as given
-                            const measures = 4;
-
-                            var selection = getSelection();
-                            //mapOverSelection(selection);
-
+                        // Replace all notes with C
+                        var selection = getSelection();
+                        if (selection) {
+                            mapOverSelection(selection, filterNotes);
                         }
-                    
 
                         curScore.endCmd();
+                        Qt.quit();
+                    }
+                }
+
+                Button {
+                    id: replaceOnlyButton
+                    text: "Replace Notes with C Only"
+                    Layout.columnSpan: 2
+                    onClicked: {
+                        var selection = getSelection();
+                        if (!selection) {
+                            console.log("No selection found");
+                            return;
+                        }
+                        
+                        curScore.startCmd();
+                        mapOverSelection(selection, filterNotes);
+                        curScore.endCmd();
+                        Qt.quit();
+                    }
+                }
+
+                Button {
+                    id: cancelButton
+                    text: "Cancel"
+                    Layout.columnSpan: 2
+                    onClicked: {
                         Qt.quit();
                     }
                 }
             }
         }
     }
-    
 
     onRun: {
         if (!curScore) {
