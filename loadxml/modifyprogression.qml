@@ -270,42 +270,17 @@ MuseScore {
     function getExistingChordProgression() {
         // For now, return a simple 4-measure progression
         // In a real implementation, this would analyze the current score
-        return ["C", "Am", "F", "G"];
+        return ["Am", "Dm9", "G9", "Cmaj9"];
     }
     
     function getTargetChordProgression(selectedProgression) {
-        // Get the target chord progression from the selected progression
-        if (!uiData.userInterface || !uiData.userInterface.chordProgression) {
-            return ["C", "C", "C", "C"];
-        }
-        
-        var progressions = uiData.userInterface.chordProgression;
-        var matchingProgression = progressions.find(function(item) {
-            return Object.keys(item)[0] === selectedProgression;
-        });
-        
-        if (matchingProgression) {
-            var chords = matchingProgression[selectedProgression];
-            // Return first 4 chords or pad with C if less than 4
-            var result = [];
-            for (var i = 0; i < 4; i++) {
-                if (i < chords.length) {
-                    result.push(chords[i]);
-                } else {
-                    result.push("C");
-                }
-            }
-            return result;
-        }
-        
-        return ["C", "C", "C", "C"];
+        var selectedProgressionKey = Object.keys(uiData.userInterface.chordProgression[progression.currentIndex])[0];
+        return selectedProgressionKey.split("-");        return 
     }
     
     function replaceChordProgressions(existingProgression, targetProgression) {
-        console.log("Existing progression:", existingProgression);
-        console.log("Target progression:", targetProgression);
+
         
-        // Find measures where chord progressions differ
         var differentMeasures = [];
         for (var i = 0; i < 4; i++) {
             if (existingProgression[i] !== targetProgression[i]) {
@@ -534,10 +509,11 @@ MuseScore {
                         rewindToInsertLocation(cursor, numMeasures, insertMode.model[insertMode.currentIndex].text);
                         insertNotes(cursor, notes.bass, 4); 
 
-                        // Replace all notes with C
-                        var selection = getSelection();
-                        if (selection) {
-                            mapOverSelection(selection, filterNotes);
+                        if(matchChords){
+                            var selection = getSelection();
+                            if (selection) {
+                                mapOverSelection(selection, filterNotes);
+                            }
                         }
 
                         curScore.endCmd();
