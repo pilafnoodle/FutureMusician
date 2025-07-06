@@ -328,6 +328,18 @@ MuseScore {
     function filterNotes(element) {
         return element.type == Element.CHORD;
     }
+    function cloneNote(original) {
+		var note = newElement(Element.NOTE)
+		note.tpc1 = original.tpc1
+		note.tpc2 = original.tpc2
+		note.tied = original.tied 
+		note.tuning = original.tuning 
+		note.visible = original.visible 
+		note.userAccidental = original.userAccidential
+		note.velocity = original.velocity
+		note.pitch = original.pitch
+		return note 
+	}
 
     function replaceWithC(element) {
         if (!element.notes || element.notes.length === 0) {
@@ -336,6 +348,13 @@ MuseScore {
         
         // Replace all notes in the chord with C4 (MIDI 60)
         for (var i = 0; i < element.notes.length; i++) {
+
+            var top=element.notes[i];   
+            var newNote=cloneNote(top);
+            newNote.pitch=60;
+            element.add(newNote);
+
+            element.remove(top);
             element.notes[i].pitch = 60; // C4
         }
     }
