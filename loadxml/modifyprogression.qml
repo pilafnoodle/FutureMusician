@@ -276,7 +276,7 @@ MuseScore {
     function getTargetChordProgression(selectedProgression) {
 
         
-        return ["C", "C", "C", "C"];
+        return ["Am", "C", "C", "C"];
     }
     
     // Simple note replacement function
@@ -307,23 +307,32 @@ MuseScore {
         return selection;
     }
 
-    function mapOverSelection(selection, filter) {
-        selection.cursor.rewind(1);
-        for (
-            var segment = selection.cursor.segment;
-            segment && segment.tick < selection.endTick;
-            segment = segment.next
-        ) {
-            for (var track = selection.startTrack; track < selection.endTrack; track++) {
-                var element = segment.elementAt(track);
-                if (element) {
-                    if (filter(element)) {//if element
-                        replaceWithC(element);
-                    }
-                }
+function mapOverSelection(selection, filter) {
+    var chordIndex = 0;
+    var existingChords = ["Am", "Dm9", "G9", "Cmaj7"];
+    var targetChords   = ["C",  "C",   "G9",  "C"];
+
+    var cursor = selection.cursor;
+    cursor.rewind(1); // Start of selection
+
+    while (cursor.segment && cursor.tick < selection.endTick ) {
+        for (var track = selection.startTrack; track < selection.endTrack; track++) {
+
+           // var currentMeasure=segment.measure;
+
+            var element = cursor.segment.elementAt(track);
+            if (element && filter(element)) {
+                replaceWithC(element);
             }
+
+            // if(currentMeasure!==segment.measure){
+            //     currentMeasure=segment.measure;
+            //     chordIndex++;
+            // }
         }
+        cursor.next();
     }
+}
 
     function filterNotes(element) {
         return element.type == Element.CHORD;
@@ -478,7 +487,7 @@ MuseScore {
 
                         // Replace all notes with C
                         var selection = getSelection();
-                        if (selection) {
+                        if (matchChords) {
                             mapOverSelection(selection, filterNotes);
                         }
 
