@@ -266,20 +266,17 @@ MuseScore {
         return matchingTemplates[randomIndex];
     }
 
-    // Chord progression functions
     function getExistingChordProgression() {
-        // For now, return a simple 4-measure progression
-        // In a real implementation, this would analyze the current score
+        //chord progression of the default file piano_4-4_01
         return ["Am", "Dm9", "G9", "Cmaj7"];
     }
     
     function getTargetChordProgression(selectedProgression) {
+        var selectedProgression = Object.keys(uiData.userInterface.chordProgression[progression.currentIndex])[0];
 
-        
-        return ["Am", "C", "C", "C"];
+        return selectedProgression.split("-");
     }
     
-    // Simple note replacement function
     function getSelection() {
         var cursor = curScore.newCursor();
         cursor.rewind(1);
@@ -307,32 +304,45 @@ MuseScore {
         return selection;
     }
 
-function mapOverSelection(selection, filter) {
-    var chordIndex = 0;
-    var existingChords = ["Am", "Dm9", "G9", "Cmaj7"];
-    var targetChords   = ["C",  "C",   "G9",  "C"];
+    function mapOverSelection(selection, filter) {
+        var chordIndex = 0;
+        var existingChords = ["Am", "Dm9", "G9", "Cmaj7"];
+        var targetChords   = getTargetChordProgression();
 
-    var cursor = selection.cursor;
-    cursor.rewind(1); // Start of selection
+        var divisions = 240; // from XML
+        var ticksPerMeasure = 960*2;
 
-    while (cursor.segment && cursor.tick < selection.endTick ) {
-        for (var track = selection.startTrack; track < selection.endTrack; track++) {
+        var cursor = selection.cursor;
+        cursor.rewind(1); 
+        var startTick = cursor.tick;
+        
+        var startMeasure = Math.floor(startTick / ticksPerMeasure);
+        var nextMeasureTick = (startMeasure + 1) * ticksPerMeasure;
 
-           // var currentMeasure=segment.measure;
-
-            var element = cursor.segment.elementAt(track);
-            if (element && filter(element)) {
-                replaceWithC(element);
+        while (cursor.segment && cursor.tick < selection.endTick) {
+            
+            if (cursor.tick >= nextMeasureTick) {
+                chordIndex++;
+                nextMeasureTick += ticksPerMeasure;
             }
 
-            // if(currentMeasure!==segment.measure){
-            //     currentMeasure=segment.measure;
-            //     chordIndex++;
-            // }
+            var currentChordIndex = chordIndex;
+            if (currentChordIndex >= existingChords.length) {
+                currentChordIndex = currentChordIndex % existingChords.length;
+            }
+
+            for (var track = selection.startTrack; track < selection.endTrack; track++) {
+                var element = cursor.segment.elementAt(track);
+                
+                if (element && filter(element) && existingChords[currentChordIndex] !== targetChords[currentChordIndex]) {
+                    replaceWithC(element);
+                }
+            }
+
+            cursor.next();
         }
-        cursor.next();
     }
-}
+
 
     function filterNotes(element) {
         return element.type == Element.CHORD;
@@ -354,9 +364,7 @@ function mapOverSelection(selection, filter) {
         if (!element.notes || element.notes.length === 0) {
             return;
         }
-        
-        // Replace all notes in the chord with C4 (MIDI 60)
-        for (var i = 0; i < element.notes.length; i++) {
+                for (var i = 0; i < element.notes.length; i++) {
 
             var top=element.notes[i];   
             var newNote=cloneNote(top);
