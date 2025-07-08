@@ -378,8 +378,14 @@ MuseScore {
     function fixChord(element,existingChords,targetChords,chordIndex) {
 
         var targetChord=targetChords[chordIndex];
-        var targetData=chordData.chordSymbolToMIDI[targetChord];
+        var existingChord=existingChords[chordIndex];
 
+        //these two lines break the code.
+        var targetTones=chordData.chordSymbolToMIDI[targetChord].chordTones;
+        var targetMidi=chordData.chordSymbolToMIDI[targetChord].midi;
+
+        // var existingTones=chordData.chordSymbolToMIDI[existingChord].chordTones;
+        // var existingMidi=chordData.chordSymbolToMIDI[existingChord].midi;
 
         if (!element.notes || element.notes.length === 0) {
             return;
@@ -387,16 +393,27 @@ MuseScore {
             for (var i = 0; i < element.notes.length; i++) {
 
                 //figure out which note is the root
-
+                
                 // notesInChord=lookup targetchord in json;
+                
+                var top=element.notes[i];
 
-                var top=element.notes[i];   
+                // var toneNumber;
+
+                // for(var j=0; j<existingChords.length;j++){
+                //     if(top.pitch=){
+
+                //     }
+                // }   
+
+                // var newPitch = top.pitch
+
                 var newNote=cloneNote(top);
                 newNote.pitch=60;
                 element.add(newNote);
 
                 element.remove(top);
-                element.notes[i].pitch = 60; // C4
+                element.notes[i].pitch = 72; // C4
         }
     }
 
