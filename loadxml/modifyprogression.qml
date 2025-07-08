@@ -17,6 +17,8 @@ MuseScore {
 
     property var uiData: ({})
     property var scoreData: ({})
+    property var chordData: ({})
+
     property bool dataLoaded: false
 
     FileIO {
@@ -27,6 +29,11 @@ MuseScore {
     FileIO {
         id: scoreDataFile
         source: Qt.resolvedUrl("scoreData.json")
+    }
+
+    FileIO {
+        id: chordDataFile
+        source: Qt.resolvedUrl("chordSymbolToMIDI.json")
     }
 
     FileIO {
@@ -43,6 +50,11 @@ MuseScore {
             var scoreJson = scoreDataFile.read();
             if (scoreJson) {
                 scoreData = JSON.parse(scoreJson);
+            }
+            
+            var chordJson = chordDataFile.read();
+            if (chordJson) {
+                chordData = JSON.parse(chordJson);
             }
 
             dataLoaded = true;
@@ -319,7 +331,7 @@ MuseScore {
         var startMeasure = Math.floor(startTick / ticksPerMeasure);
         var nextMeasureTick = (startMeasure + 1) * ticksPerMeasure;
 
-        while (cursor.segment && cursor.tick < selection.endTick) {
+        while (cursor.segment && cursor.tick < startTick+(4*ticksPerMeasure)) { //cursor.segment && cursor.tick < selection.endTick
             
             if (cursor.tick >= nextMeasureTick) {
                 chordIndex++;
@@ -335,7 +347,9 @@ MuseScore {
                 var element = cursor.segment.elementAt(track);
                 
                 if (element && filter(element) && existingChords[currentChordIndex] !== targetChords[currentChordIndex]) {
-                    replaceWithC(element);
+
+
+                    fixChord(element,existingChords,targetChords,chordIndex);
                 }
             }
 
@@ -360,19 +374,28 @@ MuseScore {
 		return note 
 	}
 
-    function replaceWithC(element) {
+    function fixChord(element,existingChords,targetChords,chordIndex) {
+
+        var targetChord=targetChords[chordIndex];
+        var targetData=chordData.chordSymbolToMIDI[targetChord];
+
+
         if (!element.notes || element.notes.length === 0) {
             return;
         }
-                for (var i = 0; i < element.notes.length; i++) {
+            for (var i = 0; i < element.notes.length; i++) {
 
-            var top=element.notes[i];   
-            var newNote=cloneNote(top);
-            newNote.pitch=60;
-            element.add(newNote);
+                //figure out which note is the root
 
-            element.remove(top);
-            element.notes[i].pitch = 60; // C4
+                // notesInChord=lookup targetchord in json;
+
+                var top=element.notes[i];   
+                var newNote=cloneNote(top);
+                newNote.pitch=60;
+                element.add(newNote);
+
+                element.remove(top);
+                element.notes[i].pitch = 60; // C4
         }
     }
 
