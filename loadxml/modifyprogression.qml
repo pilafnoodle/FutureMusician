@@ -331,7 +331,8 @@ MuseScore {
         var startMeasure = Math.floor(startTick / ticksPerMeasure);
         var nextMeasureTick = (startMeasure + 1) * ticksPerMeasure;
 
-        while (cursor.segment && cursor.tick < startTick+(4*ticksPerMeasure)) { //cursor.segment && cursor.tick < selection.endTick
+        //while loop goes until the length of existing chords.
+        while (cursor.segment && cursor.tick < startTick+(existingChords.length*ticksPerMeasure)) { //cursor.segment && cursor.tick < selection.endTick
             
             if (cursor.tick >= nextMeasureTick) {
                 chordIndex++;
