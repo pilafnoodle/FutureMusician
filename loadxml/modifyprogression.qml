@@ -26,7 +26,7 @@ MuseScore {
 
     FileIO {
         id: scoreDataFile
-        source: Qt.resolvedUrl("scoreDataTest.json")
+        source: Qt.resolvedUrl("scoreData.json")
     }
 
     FileIO {
