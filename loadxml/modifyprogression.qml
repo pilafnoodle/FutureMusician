@@ -315,49 +315,65 @@ MuseScore {
         selection.endTrack = selection.endStaff * 4;
         return selection;
     }
+    
 
-    function mapOverSelection(selection, filter) {
+    function mapOverTreble(selection, filter) {
+        mapOverTracks(selection, filter, 0, 4); // Tracks 0 to 3
+    }
+
+    function mapOverBass(selection, filter) {
+        mapOverTracks(selection, filter, 4, 8); // Tracks 4 to 7
+    }
+    function findClosestPitchClass(notePitchClass, targetMidi) {
+        // targetMidi is an array of midi pitch numbers (could be > 11, so mod 12)
+        // We'll find the pitch class in targetMidi closest to notePitchClass by absolute distance mod 12
+
+        let closest = targetMidi[0] % 12;
+        let minDistance = 12;
+
+        for (let i = 0; i < targetMidi.length; i++) {
+            let targetPC = targetMidi[i] % 12;
+            // Calculate distance mod 12
+            let dist = Math.min(
+                Math.abs(notePitchClass - targetPC),
+                12 - Math.abs(notePitchClass - targetPC)
+            );
+            if (dist < minDistance) {
+                minDistance = dist;
+                closest = targetPC;
+            }
+        }
+        return closest;
+    }
+    function mapOverTracks(selection, filter, trackStart, trackEnd) {
         var chordIndex = 0;
-        var existingChords = ["Am", "Dm9", "G9", "Cmaj7"];
-        var targetChords   = getTargetChordProgression();
+        var existingChords =getExistingChordProgression() ;
+        var targetChords = getTargetChordProgression();
 
-        var divisions = 240; // from XML
-        var ticksPerMeasure = 960*2;
+        var ticksPerMeasure = 960 * 2;
 
         var cursor = selection.cursor;
         cursor.rewind(1); 
         var startTick = cursor.tick;
-        
         var startMeasure = Math.floor(startTick / ticksPerMeasure);
         var nextMeasureTick = (startMeasure + 1) * ticksPerMeasure;
 
-        //while loop goes until the length of existing chords.
-        while (cursor.segment && cursor.tick < startTick+(existingChords.length*ticksPerMeasure)) { //cursor.segment && cursor.tick < selection.endTick
-            
+        while (cursor.segment && cursor.tick < startTick + (existingChords.length * ticksPerMeasure)) {
             if (cursor.tick >= nextMeasureTick) {
                 chordIndex++;
                 nextMeasureTick += ticksPerMeasure;
             }
 
-            var currentChordIndex = chordIndex;
-            if (currentChordIndex >= existingChords.length) {
-                currentChordIndex = currentChordIndex % existingChords.length;
-            }
-
-            for (var track = selection.startTrack; track < selection.endTrack; track++) {
+            for (var track = trackStart; track < trackEnd; track++) {
                 var element = cursor.segment.elementAt(track);
-                
-                if (element && filter(element) && existingChords[currentChordIndex] !== targetChords[currentChordIndex]) {
-
-
-                    fixChord(element,existingChords,targetChords,chordIndex);
+                if (element && filter(element) && existingChords[chordIndex] !== targetChords[chordIndex]) {
+                    fixChord(element, existingChords, targetChords, chordIndex);
                 }
             }
 
             cursor.next();
         }
     }
-
 
     function filterNotes(element) {
         return element.type == Element.CHORD;
@@ -375,48 +391,55 @@ MuseScore {
 		return note 
 	}
 
-    function fixChord(element,existingChords,targetChords,chordIndex) {
+    function max(a, b) {
+        return (a > b) ? a : b;
 
-        var targetChord=targetChords[chordIndex];
-        var existingChord=existingChords[chordIndex];
+    }
+    function fixChord(element, existingChords, targetChords, chordIndex) {
+        var targetChord = targetChords[chordIndex];
+        var existingChord = existingChords[chordIndex];
 
-        //these two lines break the code.
-        var targetTones=chordData.chordSymbolToMIDI[targetChord].chordTones;
-        var targetMidi=chordData.chordSymbolToMIDI[targetChord].midi;
+        var targetTones = chordData.chordSymbolToMIDI[targetChord].chordTones;
+        var targetMidi = chordData.chordSymbolToMIDI[targetChord].midi;
 
-        // var existingTones=chordData.chordSymbolToMIDI[existingChord].chordTones;
-        // var existingMidi=chordData.chordSymbolToMIDI[existingChord].midi;
+        var existingTones = chordData.chordSymbolToMIDI[existingChord].chordTones;
+        var existingMidi = chordData.chordSymbolToMIDI[existingChord].midi;
 
         if (!element.notes || element.notes.length === 0) {
             return;
         }
-            for (var i = 0; i < element.notes.length; i++) {
 
-                //figure out which note is the root
-                
-                // notesInChord=lookup targetchord in json;
-                
-                var top=element.notes[i];
+        for (var i = 0; i < element.notes.length; i++) {
+            var top = element.notes[i];
+            var newNote = cloneNote(top);
 
-                // var toneNumber;
+            var existingPC = top.pitch % 12;
+            var closestTargetPC = findClosestPitchClass(existingPC, targetMidi);
 
-                // for(var j=0; j<existingChords.length;j++){
-                //     if(top.pitch=){
+            var matchingExistingPC = null;
+            for (var j = 0; j < existingMidi.length; j++) {
+                if ((existingMidi[j] % 12) === existingPC) {
+                    matchingExistingPC = existingMidi[j] % 12;
+                    break;
+                }
+            }
+            if (matchingExistingPC === null)
+                matchingExistingPC = existingPC;  // fallback
 
-                //     }
-                // }   
+            var pitchShift = closestTargetPC - existingPC;
 
-                // var newPitch = top.pitch
+            newNote.pitch = top.pitch + pitchShift;
 
-                var newNote=cloneNote(top);
-                newNote.pitch=60;
-                element.add(newNote);
+            element.add(newNote);
+            element.remove(top);
 
-                element.remove(top);
-                element.notes[i].pitch = 72; // C4
+
         }
     }
 
+    function mapOverAllTracks(selection, filter) {
+        mapOverTracks(selection, filter, selection.startTrack, selection.endTrack);
+    }
     // UI
     Item {
         anchors.fill: parent
@@ -537,7 +560,9 @@ MuseScore {
                         // Replace all notes with C
                         var selection = getSelection();
                         if (matchChords) {
-                            mapOverSelection(selection, filterNotes);
+                            var selection = getSelection();
+                            mapOverAllTracks(selection, filterNotes);
+
                         }
 
                         curScore.endCmd();
