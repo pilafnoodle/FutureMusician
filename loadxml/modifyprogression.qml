@@ -395,47 +395,52 @@ MuseScore {
         return (a > b) ? a : b;
 
     }
-    function fixChord(element, existingChords, targetChords, chordIndex) {
-        var targetChord = targetChords[chordIndex];
-        var existingChord = existingChords[chordIndex];
+    function findClosestPitch(originalPitch, targetMidiArray) {
+    var closest = targetMidiArray[0];
+    var minDiff = 128;
 
-        var targetTones = chordData.chordSymbolToMIDI[targetChord].chordTones;
-        var targetMidi = chordData.chordSymbolToMIDI[targetChord].midi;
+    for (var i = 0; i < targetMidiArray.length; i++) {
+        var pc = targetMidiArray[i] % 12;
+        var baseOctave = Math.floor(originalPitch / 12);
+        var candidates = [
+            pc + 12 * (baseOctave - 1),
+            pc + 12 * baseOctave,
+            pc + 12 * (baseOctave + 1)
+        ];
 
-        var existingTones = chordData.chordSymbolToMIDI[existingChord].chordTones;
-        var existingMidi = chordData.chordSymbolToMIDI[existingChord].midi;
-
-        if (!element.notes || element.notes.length === 0) {
-            return;
-        }
-
-        for (var i = 0; i < element.notes.length; i++) {
-            var top = element.notes[i];
-            var newNote = cloneNote(top);
-
-            var existingPC = top.pitch % 12;
-            var closestTargetPC = findClosestPitchClass(existingPC, targetMidi);
-
-            var matchingExistingPC = null;
-            for (var j = 0; j < existingMidi.length; j++) {
-                if ((existingMidi[j] % 12) === existingPC) {
-                    matchingExistingPC = existingMidi[j] % 12;
-                    break;
-                }
+        for (var j = 0; j < candidates.length; j++) {
+            var diff = Math.abs(candidates[j] - originalPitch);
+            if (diff < minDiff) {
+                closest = candidates[j];
+                minDiff = diff;
             }
-            if (matchingExistingPC === null)
-                matchingExistingPC = existingPC;  // fallback
-
-            var pitchShift = closestTargetPC - existingPC;
-
-            newNote.pitch = top.pitch + pitchShift;
-
-            element.add(newNote);
-            element.remove(top);
-
-
         }
     }
+
+    return closest;
+}
+    function fixChord(element, existingChords, targetChords, chordIndex) {
+    var targetChord = targetChords[chordIndex];
+    var existingChord = existingChords[chordIndex];
+
+    var targetMidi = chordData.chordSymbolToMIDI[targetChord].midi;
+
+    if (!element.notes || element.notes.length === 0) {
+        return;
+    }
+
+    for (var i = 0; i < element.notes.length; i++) {
+        var top = element.notes[i];
+        var newNote = cloneNote(top);
+
+        var bestPitch = findClosestPitch(top.pitch, targetMidi);
+
+        newNote.pitch = bestPitch;
+
+        element.add(newNote);
+        element.remove(top);
+    }
+}
 
     function mapOverAllTracks(selection, filter) {
         mapOverTracks(selection, filter, selection.startTrack, selection.endTrack);
@@ -562,7 +567,6 @@ MuseScore {
                         if (matchChords) {
                             var selection = getSelection();
                             mapOverAllTracks(selection, filterNotes);
-
                         }
 
                         curScore.endCmd();
