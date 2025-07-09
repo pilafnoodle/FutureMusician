@@ -23,7 +23,7 @@ MuseScore {
 
     FileIO {
         id: scoreDataFile
-        source: Qt.resolvedUrl("scoreData.json")
+        source: Qt.resolvedUrl("scoreDataTest.json")
     }
 
     function loadJsonData() {
@@ -334,7 +334,8 @@ MuseScore {
                         var matchingTemplate = findMatchingTemplate(selectedInstrument, selectedCharacter, selectedProgression);
 
                         file.source = Qt.resolvedUrl(matchingTemplate.museScoreFile);
-                        var xml = file.read();
+                        
+                        var xml = file.read();  // Am---|Dm9---|G9---|Cmaj9---
 
                         var notes = extractNotes(xml);
                         var cursor = curScore.newCursor();
