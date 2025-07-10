@@ -324,27 +324,7 @@ MuseScore {
     function mapOverBass(selection, filter) {
         mapOverTracks(selection, filter, 4, 8); // Tracks 4 to 7
     }
-    function findClosestPitchClass(notePitchClass, targetMidi) {
-        // targetMidi is an array of midi pitch numbers (could be > 11, so mod 12)
-        // We'll find the pitch class in targetMidi closest to notePitchClass by absolute distance mod 12
 
-        let closest = targetMidi[0] % 12;
-        let minDistance = 12;
-
-        for (let i = 0; i < targetMidi.length; i++) {
-            let targetPC = targetMidi[i] % 12;
-            // Calculate distance mod 12
-            let dist = Math.min(
-                Math.abs(notePitchClass - targetPC),
-                12 - Math.abs(notePitchClass - targetPC)
-            );
-            if (dist < minDistance) {
-                minDistance = dist;
-                closest = targetPC;
-            }
-        }
-        return closest;
-    }
     function mapOverTracks(selection, filter, trackStart, trackEnd) {
         var chordIndex = 0;
         var existingChords =getExistingChordProgression() ;
