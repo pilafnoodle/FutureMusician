@@ -324,6 +324,21 @@ MuseScore {
     function mapOverBass(selection, filter) {
         mapOverTracks(selection, filter, 4, 8); // Tracks 4 to 7
     }
+    function filterNotes(element) {
+        return element.type == Element.CHORD;
+    }
+    function cloneNote(original) {
+		var note = newElement(Element.NOTE)
+		note.tpc1 = original.tpc1
+		note.tpc2 = original.tpc2
+		note.tied = original.tied 
+		note.tuning = original.tuning 
+		note.visible = original.visible 
+		note.userAccidental = original.userAccidential
+		note.velocity = original.velocity
+		note.pitch = original.pitch
+		return note 
+	}
 
     function mapOverTracks(selection, filter, trackStart, trackEnd) {
         var chordIndex = 0;
@@ -346,7 +361,7 @@ MuseScore {
 
             for (var track = trackStart; track < trackEnd; track++) {
                 var element = cursor.segment.elementAt(track);
-                if (element && filter(element) && existingChords[chordIndex] !== targetChords[chordIndex]) {
+                if (element && filter(element) ) {
                     fixChord(element, existingChords, targetChords, chordIndex);
                 }
             }
@@ -354,22 +369,6 @@ MuseScore {
             cursor.next();
         }
     }
-
-    function filterNotes(element) {
-        return element.type == Element.CHORD;
-    }
-    function cloneNote(original) {
-		var note = newElement(Element.NOTE)
-		note.tpc1 = original.tpc1
-		note.tpc2 = original.tpc2
-		note.tied = original.tied 
-		note.tuning = original.tuning 
-		note.visible = original.visible 
-		note.userAccidental = original.userAccidential
-		note.velocity = original.velocity
-		note.pitch = original.pitch
-		return note 
-	}
 
     function max(a, b) {
         return (a > b) ? a : b;
@@ -380,7 +379,7 @@ MuseScore {
         var minDiff = 128;
 
         for (var i = 0; i < targetMidiArray.length; i++) {
-                var pc = targetMidiArray[i] % 12;
+                var pc = targetMidiArray[i];
                 var baseOctave = Math.floor(originalPitch / 12);
                 var candidates = [
                     pc + 12 * (baseOctave - 1),
@@ -404,10 +403,7 @@ MuseScore {
         var existingChord = existingChords[chordIndex];
 
         var targetMidi = chordData.chordSymbolToMIDI[targetChord].midi;
-
-        if (!element.notes || element.notes.length === 0) {
-            return;
-        }
+        
 
         for (var i = 0; i < element.notes.length; i++) {
             var top = element.notes[i];
