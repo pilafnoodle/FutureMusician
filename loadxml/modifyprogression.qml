@@ -340,83 +340,107 @@ MuseScore {
 		return note 
 	}
 
-    function mapOverTracks(selection, filter, trackStart, trackEnd) {
-        var chordIndex = 0;
-        var existingChords =getExistingChordProgression() ;
-        var targetChords = getTargetChordProgression();
+function mapOverTracks(selection, filter, trackStart, trackEnd) {
+    var chordIndex = 0;
+    var existingChords = getExistingChordProgression();
+    var targetChords = getTargetChordProgression();
 
-        var ticksPerMeasure = 960 * 2;
+    var ticksPerMeasure = 960 * 2;
 
-        var cursor = selection.cursor;
-        cursor.rewind(1); 
-        var startTick = cursor.tick;
-        var startMeasure = Math.floor(startTick / ticksPerMeasure);
-        var nextMeasureTick = (startMeasure + 1) * ticksPerMeasure;
+    var cursor = selection.cursor;
+    cursor.rewind(1); 
+    var startTick = cursor.tick;
+    var startMeasure = Math.floor(startTick / ticksPerMeasure);
+    var nextMeasureTick = (startMeasure + 1) * ticksPerMeasure;
 
-        while (cursor.segment && cursor.tick < startTick + (existingChords.length * ticksPerMeasure)) {
-            if (cursor.tick >= nextMeasureTick) {
-                chordIndex++;
-                nextMeasureTick += ticksPerMeasure;
-            }
+    var previousMidi = null;
 
-            for (var track = trackStart; track < trackEnd; track++) {
-                var element = cursor.segment.elementAt(track);
-                if (element && filter(element) ) {
-                    fixChord(element, existingChords, targetChords, chordIndex);
-                }
-            }
-
-            cursor.next();
+    while (cursor.segment && cursor.tick < startTick + (existingChords.length * ticksPerMeasure)) {
+        if (cursor.tick >= nextMeasureTick) {
+            chordIndex++;
+            nextMeasureTick += ticksPerMeasure;
         }
+
+        for (var track = trackStart; track < trackEnd; track++) {
+            var element = cursor.segment.elementAt(track);
+            if (element && filter(element)) {
+                previousMidi = fixMeasure(element, existingChords, targetChords, chordIndex, previousMidi);
+            }
+        }
+
+        cursor.next();
     }
+}
 
     function max(a, b) {
         return (a > b) ? a : b;
 
     }
-    function findClosestPitch(originalPitch, targetMidiArray) {
-        var closest = targetMidiArray[0];
-        var minDiff = 128;
+function findClosestPitch(originalPitch, targetMidiArray) {
+    var closest = originalPitch;
+    var minDiff = 128;
 
-        for (var i = 0; i < targetMidiArray.length; i++) {
-                var pc = targetMidiArray[i];
-                var baseOctave = Math.floor(originalPitch / 12);
-                var candidates = [
-                    pc + 12 * (baseOctave - 1),
-                    pc + 12 * baseOctave,
-                    pc + 12 * (baseOctave + 1)
-                ];
+    var baseOctave = Math.floor(originalPitch / 12);
 
-                for (var j = 0; j < candidates.length; j++) {
-                    var diff = Math.abs(candidates[j] - originalPitch);
-                    if (diff < minDiff) {
-                        closest = candidates[j];
-                        minDiff = diff;
-                    }
-                }
+    for (var i = 0; i < targetMidiArray.length; i++) {
+        var pc = targetMidiArray[i] % 12;
+
+        // Test the pitch class in 3 nearby octaves
+        var candidates = [
+            pc + 12 * (baseOctave - 1),
+            pc + 12 * baseOctave,
+            pc + 12 * (baseOctave + 1)
+        ];
+
+        for (var j = 0; j < candidates.length; j++) {
+            var diff = Math.abs(candidates[j] - originalPitch);
+            if (diff < minDiff) {
+                closest = candidates[j];
+                minDiff = diff;
             }
-
-            return closest;
-    }
-    function fixChord(element, existingChords, targetChords, chordIndex) {
-        var targetChord = targetChords[chordIndex];
-        var existingChord = existingChords[chordIndex];
-
-        var targetMidi = chordData.chordSymbolToMIDI[targetChord].midi;
-        
-
-        for (var i = 0; i < element.notes.length; i++) {
-            var top = element.notes[i];
-            var newNote = cloneNote(top);
-
-            var bestPitch = findClosestPitch(top.pitch, targetMidi);
-
-            newNote.pitch = bestPitch;
-
-            element.add(newNote);
-            element.remove(top);
         }
     }
+
+    return closest;
+}
+function fixMeasure(element, existingChords, targetChords, chordIndex, previousMidi) {
+    var targetChord = targetChords[chordIndex];
+    var targetMidi = chordData.chordSymbolToMIDI[targetChord].midi;
+    var currentMidi = [];
+
+    var top = element.notes[0];
+    var newNote = cloneNote(top);
+    var rootPitch;
+
+    if (!previousMidi) {
+        rootPitch = findClosestPitch(top.pitch, targetMidi);
+    } else {
+        rootPitch = findClosestPitch(previousMidi[0], targetMidi);
+    }
+
+    newNote.pitch = rootPitch;
+    element.add(newNote);
+    element.remove(top);
+    currentMidi.push(rootPitch);
+
+    for (var i = 0; i < element.notes.length; i++) {
+        var oldNote = element.notes[i];
+        var newNote = cloneNote(oldNote);
+
+        if (!previousMidi) {
+            newNote.pitch = findClosestPitch(oldNote.pitch, targetMidi);
+        } else {
+
+            newNote.pitch = findClosestPitch(intendedPitch, targetMidi);
+        }
+
+        element.add(newNote);
+        element.remove(oldNote);
+        currentMidi.push(newNote.pitch);
+    }
+
+    return currentMidi;
+}
 
     function mapOverAllTracks(selection, filter) {
         mapOverTracks(selection, filter, selection.startTrack, selection.endTrack);
