@@ -22,6 +22,7 @@ MuseScore {
     property var noteCounter:0;
     property var noteCounters:{};
 
+
     property bool dataLoaded: false
 
     FileIO {
@@ -338,26 +339,25 @@ function getMidiPitchesInPreviousMeasure(currentTick, trackStart, trackEnd) {
     cursor.rewindToTick(prevMeasureTick);
     var endTick = prevMeasureTick + ticksPerMeasure;
 
-    var notesByTrack = {};
+    var pitchesByTrack = {};
+    for (var t = trackStart; t < trackEnd; t++) {
+        pitchesByTrack[t] = [];
+    }
 
     while (cursor.segment && cursor.tick < endTick) {
-        for (var track = trackStart; track < trackEnd; track++) {
-            var element = cursor.segment.elementAt(track);
+        for (var t = trackStart; t < trackEnd; t++) {
+            var element = cursor.segment.elementAt(t);
             if (element && element.type === Element.CHORD) {
-                if (!notesByTrack[track]) notesByTrack[track] = [];
-                var chordPitches = [];
-                for (var i = 0; i < element.notes.length; i++) {
-                    chordPitches.push(element.notes[i].pitch);
+                for (var n = 0; n < element.notes.length; n++) {
+                    pitchesByTrack[t].push(element.notes[n].pitch);
                 }
-                notesByTrack[track].push(chordPitches);
             }
         }
         cursor.next();
     }
 
-    return notesByTrack;
+    return pitchesByTrack;
 }
-
 
 
 function mapOverTracks(selection, filter, trackStart, trackEnd) {
@@ -373,39 +373,37 @@ function mapOverTracks(selection, filter, trackStart, trackEnd) {
     var startMeasure = Math.floor(startTick / ticksPerMeasure);
     var nextMeasureTick = (startMeasure + 1) * ticksPerMeasure;
 
-    var noteCounters = {};
-    var prevPitchesByTrack = {};
+    var prevChordArray = null;
+    var firstNoteBass = true;
 
     while (cursor.segment && cursor.tick < startTick + (existingChords.length * ticksPerMeasure)) {
         if (cursor.tick >= nextMeasureTick) {
             chordIndex++;
             nextMeasureTick += ticksPerMeasure;
-            noteCounters = {}; // Reset for new measure
-            prevPitchesByTrack = getMidiPitchesInPreviousMeasure(cursor.tick, trackStart, trackEnd);
+            firstNoteBass = true;  // reset for each measure
         }
 
-        for (var track = trackStart; track < trackEnd; track++) {
-            if (!noteCounters[track]) noteCounters[track] = 0;
+        prevChordArray = getMidiPitchesInPreviousMeasure(cursor.tick, trackStart, trackEnd);
 
+        for (var track = trackStart; track < trackEnd; track++) {
             var element = cursor.segment.elementAt(track);
+
             if (!element || !filter(element)) continue;
 
-            var prevChordArray = null;
-            if (chordIndex !== 0 &&
-                prevPitchesByTrack[track] &&
-                prevPitchesByTrack[track][noteCounters[track]]) {
-                prevChordArray = prevPitchesByTrack[track][noteCounters[track]];
+            if (track < 4) {
+                fixMeasureTreble(element, existingChords, targetChords, chordIndex, prevChordArray[track]);
+            } else {
+                fixMeasureBass(element, targetChords, chordIndex, prevChordArray[track], firstNoteBass);
+                firstNoteBass = false;  // only first note in measure gets root logic
             }
-
-            fixMeasure(element, existingChords, targetChords, chordIndex, prevChordArray);
-            noteCounters[track]++;
         }
 
         cursor.next();
     }
 }
 
-function fixMeasure(element, existingChords, targetChords, chordIndex, prevPitchArray) {
+
+function fixMeasureTreble(element, existingChords, targetChords, chordIndex, prevPitchArray) {
     var targetChord = targetChords[chordIndex];
     var targetRelativeMidi = chordData.chordSymbolToMIDI[targetChord].midi;
 
@@ -421,6 +419,35 @@ function fixMeasure(element, existingChords, targetChords, chordIndex, prevPitch
         }
 
         var bestPitch = findClosestPitch(reference, targetRelativeMidi);
+        newNote.pitch = bestPitch;
+
+        element.add(newNote);
+        element.remove(oldNote);
+    }
+}
+
+function fixMeasureBass(element, targetChords, chordIndex, prevPitchArray, firstNoteBass) {
+    var targetChord = targetChords[chordIndex];
+    var targetRelativeMidi = chordData.chordSymbolToMIDI[targetChord].midi;
+
+    for (var i = 0; i < element.notes.length; i++) {
+        var oldNote = element.notes[i];
+        var newNote = cloneNote(oldNote);
+
+        var reference = oldNote.pitch;
+        if (prevPitchArray && i < prevPitchArray.length) {
+            reference = prevPitchArray[i];
+        }
+
+        var bestPitch;
+        var baseOctave = Math.floor(reference / 12);
+
+        if (firstNoteBass && i === 0) {
+            // first note in bass measure always root at base octave
+            bestPitch = (targetRelativeMidi[0] % 12) + 12 * baseOctave;
+        } else {
+            bestPitch = findClosestPitch(reference, targetRelativeMidi);
+        }
 
         newNote.pitch = bestPitch;
         element.add(newNote);
