@@ -293,32 +293,28 @@ MuseScore {
         return selectedProgression.split("-");
     }
     
-    function getSelection() {
-        var cursor = curScore.newCursor();
-        cursor.rewind(1);
-        if (!cursor.segment) {
-            return null;
-        }
-        var selection = {
-            cursor: cursor,
-            startTick: cursor.tick,
-            endTick: null,
-            startStaff: cursor.staffIdx,
-            endStaff: null,
-            startTrack: null,
-            endTrack: null
-        };
-        cursor.rewind(2);
-        selection.endStaff = cursor.staffIdx + 1;
-        if (cursor.tick == 0) {
-            selection.endTick = curScore.lastSegment.tick + 1;
-        } else {
-            selection.endTick = cursor.tick;
-        }
-        selection.startTrack = selection.startStaff * 4;
-        selection.endTrack = selection.endStaff * 4;
-        return selection;
+function getSelection() {
+    var cursor = curScore.newCursor();
+    cursor.rewind(1);
+    if (!cursor.segment) {
+        return null;
     }
+
+    var numStaves = curScore.staves;  // number of staves in score
+    var numTracks = curScore.ntracks; // number of tracks in score
+
+    var selection = {
+        cursor: cursor,
+        startTick: 0,
+        endTick: curScore.lastSegment.tick + 1,  // full length of score
+        startStaff: 0,
+        endStaff: numStaves,
+        startTrack: 0,
+        endTrack: numTracks
+    };
+
+    return selection;
+}
     
 
     function mapOverTreble(selection, filter) {
