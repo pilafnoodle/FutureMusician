@@ -19,6 +19,9 @@ MuseScore {
     property var scoreData: ({})
     property var chordData: ({})
 
+    property var noteCounter:0;
+    property var noteCounters:{};
+
     property bool dataLoaded: false
 
     FileIO {
@@ -324,6 +327,39 @@ MuseScore {
     function mapOverBass(selection, filter) {
         mapOverTracks(selection, filter, 4, 8); // Tracks 4 to 7
     }
+
+function getMidiPitchesInPreviousMeasure(currentTick, trackStart, trackEnd) {
+    var ticksPerMeasure = 960 * 2;
+    var prevMeasureTick = currentTick - ticksPerMeasure;
+    if (prevMeasureTick < 0) return {};
+
+    var cursor = curScore.newCursor();
+    cursor.rewind(0);
+    cursor.rewindToTick(prevMeasureTick);
+    var endTick = prevMeasureTick + ticksPerMeasure;
+
+    var notesByTrack = {};
+
+    while (cursor.segment && cursor.tick < endTick) {
+        for (var track = trackStart; track < trackEnd; track++) {
+            var element = cursor.segment.elementAt(track);
+            if (element && element.type === Element.CHORD) {
+                if (!notesByTrack[track]) notesByTrack[track] = [];
+                var chordPitches = [];
+                for (var i = 0; i < element.notes.length; i++) {
+                    chordPitches.push(element.notes[i].pitch);
+                }
+                notesByTrack[track].push(chordPitches);
+            }
+        }
+        cursor.next();
+    }
+
+    return notesByTrack;
+}
+
+
+
 function mapOverTracks(selection, filter, trackStart, trackEnd) {
     var chordIndex = 0;
     var existingChords = getExistingChordProgression();
@@ -337,93 +373,103 @@ function mapOverTracks(selection, filter, trackStart, trackEnd) {
     var startMeasure = Math.floor(startTick / ticksPerMeasure);
     var nextMeasureTick = (startMeasure + 1) * ticksPerMeasure;
 
-    var currentMidi = null;
+    var noteCounters = {};
+    var prevPitchesByTrack = {};
 
     while (cursor.segment && cursor.tick < startTick + (existingChords.length * ticksPerMeasure)) {
         if (cursor.tick >= nextMeasureTick) {
             chordIndex++;
             nextMeasureTick += ticksPerMeasure;
+            noteCounters = {}; // Reset for new measure
+            prevPitchesByTrack = getMidiPitchesInPreviousMeasure(cursor.tick, trackStart, trackEnd);
         }
 
         for (var track = trackStart; track < trackEnd; track++) {
+            if (!noteCounters[track]) noteCounters[track] = 0;
+
             var element = cursor.segment.elementAt(track);
-            if (element && filter(element) && existingChords[chordIndex] !== targetChords[chordIndex]) {
-                currentMidi = fixMeasure(element, existingChords, targetChords, chordIndex, currentMidi);
+            if (!element || !filter(element)) continue;
+
+            var prevChordArray = null;
+            if (chordIndex !== 0 &&
+                prevPitchesByTrack[track] &&
+                prevPitchesByTrack[track][noteCounters[track]]) {
+                prevChordArray = prevPitchesByTrack[track][noteCounters[track]];
             }
+
+            fixMeasure(element, existingChords, targetChords, chordIndex, prevChordArray);
+            noteCounters[track]++;
         }
 
         cursor.next();
     }
 }
 
-function fixMeasure(element, existingChords, targetChords, chordIndex, previousMidi) {
+function fixMeasure(element, existingChords, targetChords, chordIndex, prevPitchArray) {
     var targetChord = targetChords[chordIndex];
-    var targetMidi = chordData.chordSymbolToMIDI[targetChord].midi;
-
-    var currentMidi = [];
+    var targetRelativeMidi = chordData.chordSymbolToMIDI[targetChord].midi;
 
     for (var i = 0; i < element.notes.length; i++) {
-        var top = element.notes[i];
-        var newNote = cloneNote(top);
+        var oldNote = element.notes[i];
+        var newNote = cloneNote(oldNote);
 
-        let bestPitch;
-        if (!previousMidi || !Array.isArray(previousMidi)) {
-            bestPitch = findClosestPitch(top.pitch, targetMidi);
+        var reference;
+        if (!prevPitchArray || i >= prevPitchArray.length) {
+            reference = oldNote.pitch;
         } else {
-            bestPitch = findClosestPitch(previousMidi[i % previousMidi.length], targetMidi);
+            reference = prevPitchArray[i];
         }
+
+        var bestPitch = findClosestPitch(reference, targetRelativeMidi);
 
         newNote.pitch = bestPitch;
         element.add(newNote);
-        element.remove(top);
-        currentMidi.push(bestPitch);
+        element.remove(oldNote);
     }
-
-    return currentMidi;
 }
 
-function findClosestPitch(referencePitch, targetMidiArray) {
-    var closest = targetMidiArray[0];
-    var minDiff = 128;
+    function findClosestPitch(referencePitch, targetMidiArray) {
+        var closest = targetMidiArray[0];
+        var minDiff = 128;
 
-    for (var i = 0; i < targetMidiArray.length; i++) {
-        var pc = targetMidiArray[i] % 12;
-        var baseOctave = Math.floor(referencePitch / 12);
+        for (var i = 0; i < targetMidiArray.length; i++) {
+            var pc = targetMidiArray[i] % 12;
+            var baseOctave = Math.floor(referencePitch / 12);
 
-        var candidates = [
-            pc + 12 * (baseOctave - 1),
-            pc + 12 * baseOctave,
-            pc + 12 * (baseOctave + 1)
-        ];
+            var candidates = [
+                pc + 12 * (baseOctave - 1),
+                pc + 12 * baseOctave,
+                pc + 12 * (baseOctave + 1)
+            ];
 
-        for (var j = 0; j < candidates.length; j++) {
-            var diff = Math.abs(candidates[j] - referencePitch);
-            if (diff < minDiff) {
-                closest = candidates[j];
-                minDiff = diff;
+            for (var j = 0; j < candidates.length; j++) {
+                var diff = Math.abs(candidates[j] - referencePitch);
+                if (diff < minDiff) {
+                    closest = candidates[j];
+                    minDiff = diff;
+                }
             }
         }
+
+        return closest;
     }
 
-    return closest;
-}
+    function cloneNote(original) {
+        var note = newElement(Element.NOTE);
+        note.tpc1 = original.tpc1;
+        note.tpc2 = original.tpc2;
+        note.tied = original.tied;
+        note.tuning = original.tuning;
+        note.visible = original.visible;
+        note.userAccidental = original.userAccidental;
+        note.velocity = original.velocity;
+        note.pitch = original.pitch;
+        return note;
+    }
 
-function cloneNote(original) {
-    var note = newElement(Element.NOTE);
-    note.tpc1 = original.tpc1;
-    note.tpc2 = original.tpc2;
-    note.tied = original.tied;
-    note.tuning = original.tuning;
-    note.visible = original.visible;
-    note.userAccidental = original.userAccidental;
-    note.velocity = original.velocity;
-    note.pitch = original.pitch;
-    return note;
-}
-
-function filterNotes(element) {
-    return element.type == Element.CHORD;
-}
+    function filterNotes(element) {
+        return element.type == Element.CHORD;
+    }
 
 
 
