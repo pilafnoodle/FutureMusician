@@ -19,6 +19,10 @@ MuseScore {
     property var scoreData: ({})
     property var chordData: ({})
 
+    property var noteCounter:0;
+    property var noteCounters:{};
+
+
     property bool dataLoaded: false
 
     FileIO {
@@ -289,32 +293,28 @@ MuseScore {
         return selectedProgression.split("-");
     }
     
-    function getSelection() {
-        var cursor = curScore.newCursor();
-        cursor.rewind(1);
-        if (!cursor.segment) {
-            return null;
-        }
-        var selection = {
-            cursor: cursor,
-            startTick: cursor.tick,
-            endTick: null,
-            startStaff: cursor.staffIdx,
-            endStaff: null,
-            startTrack: null,
-            endTrack: null
-        };
-        cursor.rewind(2);
-        selection.endStaff = cursor.staffIdx + 1;
-        if (cursor.tick == 0) {
-            selection.endTick = curScore.lastSegment.tick + 1;
-        } else {
-            selection.endTick = cursor.tick;
-        }
-        selection.startTrack = selection.startStaff * 4;
-        selection.endTrack = selection.endStaff * 4;
-        return selection;
+function getSelection() {
+    var cursor = curScore.newCursor();
+    cursor.rewind(1);
+    if (!cursor.segment) {
+        return null;
     }
+
+    var numStaves = curScore.staves;  // number of staves in score
+    var numTracks = curScore.ntracks; // number of tracks in score
+
+    var selection = {
+        cursor: cursor,
+        startTick: 0,
+        endTick: curScore.lastSegment.tick + 1,  // full length of score
+        startStaff: 0,
+        endStaff: numStaves,
+        startTrack: 0,
+        endTrack: numTracks
+    };
+
+    return selection;
+}
     
 
     function mapOverTreble(selection, filter) {
@@ -324,99 +324,177 @@ MuseScore {
     function mapOverBass(selection, filter) {
         mapOverTracks(selection, filter, 4, 8); // Tracks 4 to 7
     }
-    function filterNotes(element) {
-        return element.type == Element.CHORD;
+
+function getMidiPitchesInPreviousMeasure(currentTick, trackStart, trackEnd) {
+    var ticksPerMeasure = 960 * 2;
+    var prevMeasureTick = currentTick - ticksPerMeasure;
+    if (prevMeasureTick < 0) return {};
+
+    var cursor = curScore.newCursor();
+    cursor.rewind(0);
+    cursor.rewindToTick(prevMeasureTick);
+    var endTick = prevMeasureTick + ticksPerMeasure;
+
+    var pitchesByTrack = {};
+    for (var t = trackStart; t < trackEnd; t++) {
+        pitchesByTrack[t] = [];
     }
-    function cloneNote(original) {
-		var note = newElement(Element.NOTE)
-		note.tpc1 = original.tpc1
-		note.tpc2 = original.tpc2
-		note.tied = original.tied 
-		note.tuning = original.tuning 
-		note.visible = original.visible 
-		note.userAccidental = original.userAccidential
-		note.velocity = original.velocity
-		note.pitch = original.pitch
-		return note 
-	}
 
-    function mapOverTracks(selection, filter, trackStart, trackEnd) {
-        var chordIndex = 0;
-        var existingChords =getExistingChordProgression() ;
-        var targetChords = getTargetChordProgression();
-
-        var ticksPerMeasure = 960 * 2;
-
-        var cursor = selection.cursor;
-        cursor.rewind(1); 
-        var startTick = cursor.tick;
-        var startMeasure = Math.floor(startTick / ticksPerMeasure);
-        var nextMeasureTick = (startMeasure + 1) * ticksPerMeasure;
-
-        while (cursor.segment && cursor.tick < startTick + (existingChords.length * ticksPerMeasure)) {
-            if (cursor.tick >= nextMeasureTick) {
-                chordIndex++;
-                nextMeasureTick += ticksPerMeasure;
-            }
-
-            for (var track = trackStart; track < trackEnd; track++) {
-                var element = cursor.segment.elementAt(track);
-                if (element && filter(element) ) {
-                    fixChord(element, existingChords, targetChords, chordIndex);
+    while (cursor.segment && cursor.tick < endTick) {
+        for (var t = trackStart; t < trackEnd; t++) {
+            var element = cursor.segment.elementAt(t);
+            if (element && element.type === Element.CHORD) {
+                for (var n = 0; n < element.notes.length; n++) {
+                    pitchesByTrack[t].push(element.notes[n].pitch);
                 }
             }
-
-            cursor.next();
         }
+        cursor.next();
     }
 
-    function max(a, b) {
-        return (a > b) ? a : b;
+    return pitchesByTrack;
+}
 
+
+function mapOverTracks(selection, filter, trackStart, trackEnd) {
+    var chordIndex = 0;
+    var existingChords = getExistingChordProgression();
+    var targetChords = getTargetChordProgression();
+
+    var ticksPerMeasure = 960 * 2;
+    var cursor = selection.cursor;
+    cursor.rewind(1);
+
+    var startTick = cursor.tick;
+    var startMeasure = Math.floor(startTick / ticksPerMeasure);
+    var nextMeasureTick = (startMeasure + 1) * ticksPerMeasure;
+
+    var prevChordArray = null;
+    var firstNoteBass = true;
+
+    while (cursor.segment && cursor.tick < startTick + (existingChords.length * ticksPerMeasure)) {
+        if (cursor.tick >= nextMeasureTick) {
+            chordIndex++;
+            nextMeasureTick += ticksPerMeasure;
+            firstNoteBass = true;  // reset for each measure
+        }
+
+        prevChordArray = getMidiPitchesInPreviousMeasure(cursor.tick, trackStart, trackEnd);
+
+        for (var track = trackStart; track < trackEnd; track++) {
+            var element = cursor.segment.elementAt(track);
+
+            if (!element || !filter(element)) continue;
+
+            if (track < 4) {
+                fixMeasureTreble(element, existingChords, targetChords, chordIndex, prevChordArray[track]);
+            } else {
+                fixMeasureBass(element, targetChords, chordIndex, prevChordArray[track], firstNoteBass);
+                firstNoteBass = false;  // only first note in measure gets root logic
+            }
+        }
+
+        cursor.next();
     }
-    function findClosestPitch(originalPitch, targetMidiArray) {
+}
+
+
+function fixMeasureTreble(element, existingChords, targetChords, chordIndex, prevPitchArray) {
+    var targetChord = targetChords[chordIndex];
+    var targetRelativeMidi = chordData.chordSymbolToMIDI[targetChord].midi;
+
+    for (var i = 0; i < element.notes.length; i++) {
+        var oldNote = element.notes[i];
+        var newNote = cloneNote(oldNote);
+
+        var reference;
+        if (!prevPitchArray || i >= prevPitchArray.length) {
+            reference = oldNote.pitch;
+        } else {
+            reference = prevPitchArray[i];
+        }
+
+        newNote.pitch =         findClosestPitch(reference, targetRelativeMidi);
+
+
+        element.add(newNote);
+        element.remove(oldNote);
+    }
+}
+
+function fixMeasureBass(element, targetChords, chordIndex, prevPitchArray, firstNoteBass) {
+    var targetChord = targetChords[chordIndex];
+    var targetRelativeMidi = chordData.chordSymbolToMIDI[targetChord].midi;
+
+    for (var i = 0; i < element.notes.length; i++) {
+        var oldNote = element.notes[i];
+        var newNote = cloneNote(oldNote);
+
+        var reference = oldNote.pitch;
+        if (prevPitchArray && i < prevPitchArray.length) {
+            reference = prevPitchArray[i];
+        }
+
+        var bestPitch;
+        var baseOctave = Math.floor(reference / 12);
+
+        if (firstNoteBass && i === 0) {
+            // first note in bass measure always root at base octave
+            bestPitch = (targetRelativeMidi[0] % 12) + 12 * baseOctave;
+        } else {
+            bestPitch = findClosestPitch(reference, targetRelativeMidi);
+        }
+
+        newNote.pitch = bestPitch;
+        element.add(newNote);
+        element.remove(oldNote);
+    }
+}
+
+    function findClosestPitch(referencePitch, targetMidiArray) {
         var closest = targetMidiArray[0];
         var minDiff = 128;
 
         for (var i = 0; i < targetMidiArray.length; i++) {
-                var pc = targetMidiArray[i];
-                var baseOctave = Math.floor(originalPitch / 12);
-                var candidates = [
-                    pc + 12 * (baseOctave - 1),
-                    pc + 12 * baseOctave,
-                    pc + 12 * (baseOctave + 1)
-                ];
+            var pc = targetMidiArray[i] % 12;
+            var baseOctave = Math.floor(referencePitch / 12);
 
-                for (var j = 0; j < candidates.length; j++) {
-                    var diff = Math.abs(candidates[j] - originalPitch);
-                    if (diff < minDiff) {
-                        closest = candidates[j];
-                        minDiff = diff;
-                    }
+            var candidates = [
+                pc + 12 * (baseOctave - 1),
+                pc + 12 * baseOctave,
+                pc + 12 * (baseOctave + 1)
+            ];
+
+            for (var j = 0; j < candidates.length; j++) {
+                var diff = Math.abs(candidates[j] - referencePitch);
+                if (diff < minDiff) {
+                    closest = candidates[j];
+                    minDiff = diff;
                 }
             }
-
-            return closest;
-    }
-    function fixChord(element, existingChords, targetChords, chordIndex) {
-        var targetChord = targetChords[chordIndex];
-        var existingChord = existingChords[chordIndex];
-
-        var targetMidi = chordData.chordSymbolToMIDI[targetChord].midi;
-        
-
-        for (var i = 0; i < element.notes.length; i++) {
-            var top = element.notes[i];
-            var newNote = cloneNote(top);
-
-            var bestPitch = findClosestPitch(top.pitch, targetMidi);
-
-            newNote.pitch = bestPitch;
-
-            element.add(newNote);
-            element.remove(top);
         }
+
+        return closest;
     }
+
+    function cloneNote(original) {
+        var note = newElement(Element.NOTE);
+        note.tpc1 = original.tpc1;
+        note.tpc2 = original.tpc2;
+        note.tied = original.tied;
+        note.tuning = original.tuning;
+        note.visible = original.visible;
+        note.userAccidental = original.userAccidental;
+        note.velocity = original.velocity;
+        note.pitch = original.pitch;
+        return note;
+    }
+
+    function filterNotes(element) {
+        return element.type == Element.CHORD;
+    }
+
+
 
     function mapOverAllTracks(selection, filter) {
         mapOverTracks(selection, filter, selection.startTrack, selection.endTrack);
