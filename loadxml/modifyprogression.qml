@@ -443,37 +443,73 @@ function fixMeasureTreble(element, targetChords, chordIndex, prevPitchArray, fir
 
 function fixMeasureBass(element, targetChords, chordIndex, prevPitchArray, firstNoteBass) {
     var targetChord = targetChords[chordIndex];
+    
     var targetRelativeMidi = chordData.chordSymbolToMIDI[targetChord].midi;
-
     var oldNote = element.notes[0];
     var newNote = cloneNote(oldNote);
 
-    var reference = oldNote.pitch;
+    //Calculate base octave from reference pitch
+    var referencePitch = oldNote.pitch;
     if (prevPitchArray && b < prevPitchArray.length) {
-        reference = prevPitchArray[b];
+        referencePitch = prevPitchArray[b];
     }
+    var baseOctave = Math.floor(referencePitch / 12);
 
     var bestPitch;
-    var baseOctave = Math.floor(reference / 12);
-
-    if (firstNoteBass) {
-        bestPitch = (targetRelativeMidi[0] % 12) + 12 * baseOctave;
-    } else {
-        bestPitch = findClosestPitch(reference, targetRelativeMidi);
+    if (chordIndex === 0) {
+        bestPitch = findClosestPitch(oldNote.pitch, targetRelativeMidi);
+    }
+    else if (firstNoteBass) {
+        bestPitch = findClosestPitch(targetRelativeMidi, targetRelativeMidi);
+    }
+    else {
+        bestPitch = findClosestPitch(referencePitch, targetRelativeMidi);
         
-        // Avoid consecutive duplicate pitches (except for first note in measure)
         if (lastBassPitch !== null && bestPitch === lastBassPitch) {
-            bestPitch = findAlternatePitch(bestPitch, targetRelativeMidi, reference);
+            bestPitch = findAlternatePitch(bestPitch, targetRelativeMidi, referencePitch);
         }
     }
-    
-    newNote.pitch = bestPitch;
-    lastBassPitch = bestPitch; // Store for next comparison
 
+    newNote.pitch = bestPitch;
+    lastBassPitch = bestPitch;
     element.add(newNote);
     element.remove(oldNote);
     b++;
-}
+}   
+
+// function fixMeasureBass(element, targetChords, chordIndex, prevPitchArray, firstNoteBass) {
+//     var targetChord = targetChords[chordIndex];
+//     var targetRelativeMidi = chordData.chordSymbolToMIDI[targetChord].midi;
+
+//     var oldNote = element.notes[0];
+//     var newNote = cloneNote(oldNote);
+
+//     var reference = oldNote.pitch;
+//     if (prevPitchArray && b < prevPitchArray.length) {
+//         reference = prevPitchArray[b];
+//     }
+
+//     var bestPitch;
+//     var baseOctave = Math.floor(reference / 12);
+
+//     if (firstNoteBass) {
+//         bestPitch = (targetRelativeMidi[0] % 12) + 12 * baseOctave;
+//     } else {
+//         bestPitch = findClosestPitch(reference, targetRelativeMidi);
+        
+//         // Avoid consecutive duplicate pitches (except for first note in measure)
+//         if (lastBassPitch !== null && bestPitch === lastBassPitch) {
+//             bestPitch = findAlternatePitch(bestPitch, targetRelativeMidi, reference);
+//         }
+//     }
+    
+//     newNote.pitch = bestPitch;
+//     lastBassPitch = bestPitch; // Store for next comparison
+
+//     element.add(newNote);
+//     element.remove(oldNote);
+//     b++;
+// }
 
 function findAlternatePitch(currentPitch, targetMidiArray, referencePitch) {
     // Get all available pitches in the chord (including different octaves)
