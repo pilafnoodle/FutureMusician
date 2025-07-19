@@ -382,7 +382,6 @@ function mapOverTracks(selection, filter, trackStart, trackEnd) {
             nextMeasureTick += ticksPerMeasure;
             firstNoteBass = true;  //resetfor each measure
             firstNoteTreble = true;  
-
             t=0;
             b=0;
             previousBassArray=[];
@@ -399,8 +398,8 @@ function mapOverTracks(selection, filter, trackStart, trackEnd) {
             if (!element || !filter(element)) continue;
 
             if (track < 4) {
-
-                fixMeasureTreble(element, targetChords, chordIndex, previousTrebleArray);
+                fixMeasureTreble(element, targetChords, chordIndex, previousTrebleArray,firstNoteTreble);
+                firstNoteTreble=false;
             } else {
                 
 
@@ -426,9 +425,8 @@ function fixMeasureTreble(element, targetChords, chordIndex, prevPitchArray, fir
     }
 
     var bestPitch;
-    if (t===0) {
-        // Force root or special logic
-        bestPitch = findClosestPitch(oldNote.pitch, targetRelativeMidi);
+    if (chordIndex===0) {
+        bestPitch=findClosestPitch(oldNote.pitch, targetRelativeMidi);
     } else {
         bestPitch = findClosestPitch(referencePitch, targetRelativeMidi);
         if (lastTreblePitch !== null && bestPitch === lastTreblePitch) {
