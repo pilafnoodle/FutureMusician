@@ -443,46 +443,51 @@ MuseScore {
 
 function fixMeasureBass(element, targetChords, chordIndex, prevPitchArray, firstNoteBass) {
     var targetChord = targetChords[chordIndex];
-    var targetRelativeMidi = chordData.chordSymbolToMIDI[targetChord].midi;
+    var chordInfo = chordData.chordSymbolToMIDI[targetChord];
+    var targetRelativeMidi = chordInfo.midi;
     var oldNote = element.notes[0];
     var newNote = cloneNote(oldNote);
-    var originalPitch = oldNote.pitch; // Store original pitch
-
-    // 2. Calculate base octave from original pitch, not reference pitch
+    var originalPitch = oldNote.pitch;
     var baseOctave = Math.floor(originalPitch / 12);
+
+    var rootNoteName = chordInfo.chordTones[0];
+    var noteToPitchClass = { C:0, "C#":1, D:2, "D#":3, E:4, F:5, "F#":6, 
+                           G:7, "G#":8, A:9, "A#":10, B:11 };
+    var rootPitchClass = noteToPitchClass[rootNoteName];
 
     var bestPitch;
     
-   if (firstNoteBass) {
-        // First note of measure - force root in correct octave
-        bestPitch=targetRelativeMidi[0]+(12*baseOctave);
-    }else if (chordIndex === 0) {
-        // First chord in progression - use normal voice leading
+    if (firstNoteBass) {
+        bestPitch = rootPitchClass + (12 * baseOctave);
+        
+        if (prevPitchArray && prevPitchArray.length > 0) {
+            if (Math.abs(bestPitch - prevPitchArray[0]) > 12) {
+                bestPitch += (bestPitch > prevPitchArray[0]) ? -12 : 12;
+            }
+        }
+    }
+    else if (chordIndex === 0) {
         bestPitch = findClosestPitch(originalPitch, targetRelativeMidi);
     }
     else {
-        // Normal voice leading for other notes
-        var referencePitch = prevPitchArray && b < prevPitchArray.length 
+        var referencePitch = (prevPitchArray && b < prevPitchArray.length) 
             ? prevPitchArray[b] 
             : originalPitch;
         bestPitch = findClosestPitch(referencePitch, targetRelativeMidi);
         
-        // Avoid consecutive duplicates
         if (lastBassPitch !== null && bestPitch === lastBassPitch) {
             bestPitch = findAlternatePitch(bestPitch, targetRelativeMidi, referencePitch);
         }
     }
 
-    // 4. Apply changes
     newNote.pitch = bestPitch;
     lastBassPitch = bestPitch;
     element.add(newNote);
     element.remove(oldNote);
     b++;
-} 
+}
 
     function findAlternatePitch(currentPitch, targetMidiArray, referencePitch) {
-        // Get all available pitches in the chord (including different octaves)
         var availablePitches = [];
         var baseOctave = Math.floor(referencePitch / 12);
         
