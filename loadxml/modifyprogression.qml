@@ -457,17 +457,16 @@ function fixMeasureBass(element, targetChords, chordIndex, prevPitchArray, first
 
     var bestPitch;
     
-    if (firstNoteBass) {
+    if (firstNoteBass && prevPitchArray) { //previous array exists
         bestPitch = rootPitchClass + (12 * baseOctave);
         
-        if (prevPitchArray && prevPitchArray.length > 0) {
-            if (Math.abs(bestPitch - prevPitchArray[0]) > 12) {
-                bestPitch += (bestPitch > prevPitchArray[0]) ? -12 : 12;
-            }
+        if (Math.abs(bestPitch - prevPitchArray[0]) > 7) {
+            bestPitch += (bestPitch > prevPitchArray[0]) ? -12 : 12;
         }
+        
     }
     else if (chordIndex === 0) {
-        bestPitch = findClosestPitch(originalPitch, targetRelativeMidi);
+        bestPitch =findClosestPitch(originalPitch, targetRelativeMidi);
     }
     else {
         var referencePitch = (prevPitchArray && b < prevPitchArray.length) 
