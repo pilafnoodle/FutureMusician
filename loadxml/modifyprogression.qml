@@ -8,7 +8,7 @@ import FileIO 3.0
 MuseScore {
     version: "3.0.2"
     title: "modify chord progression"
-    description: "Load XML notes and replace chord notes with C"
+    description: "insert chord progression if selected progression exists, otherwise shift default file to match"
     menuPath: "load xml notes"
     pluginType: "dialog"
 
